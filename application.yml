@@ -1,0 +1,733 @@
+#
+# SERVER
+#
+server:
+    port: 5401
+debug: false
+
+#
+# SPRING
+#
+spring:
+    application:
+        name: template-springboot-flux-3x
+    quartz:
+        auto-startup: false
+    webflux:
+        multipart:
+            max-request-size: 32MB   # total request size
+            max-part-size: 16MB      # each part size
+    main:
+        banner-mode: off
+    threads:
+        virtual:
+            enabled: true
+    jpa:
+        open-in-view: false
+    autoconfigure:
+        exclude:
+            - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+            - org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration
+            - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+            - org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration
+            - org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration
+            - org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration
+            - org.springframework.boot.autoconfigure.context.MessageSourceAutoConfiguration
+            - org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.cassandra.CassandraDataAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.cassandra.CassandraReactiveDataAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.cassandra.CassandraReactiveRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.cassandra.CassandraRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.couchbase.CouchbaseDataAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.couchbase.CouchbaseReactiveDataAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.couchbase.CouchbaseReactiveRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.couchbase.CouchbaseRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.elasticsearch.ReactiveElasticsearchRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.jdbc.JdbcRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.ldap.LdapRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.mongo.MongoReactiveDataAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.mongo.MongoReactiveRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.mongo.MongoRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.neo4j.Neo4jDataAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.neo4j.Neo4jReactiveDataAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.neo4j.Neo4jReactiveRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.neo4j.Neo4jRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.r2dbc.R2dbcRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration
+            - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration
+            - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
+            - org.springframework.boot.autoconfigure.elasticsearch.ReactiveElasticsearchClientAutoConfiguration
+            - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+            - org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration
+            - org.springframework.boot.autoconfigure.graphql.GraphQlAutoConfiguration
+            - org.springframework.boot.autoconfigure.graphql.data.GraphQlQueryByExampleAutoConfiguration
+            - org.springframework.boot.autoconfigure.graphql.data.GraphQlQuerydslAutoConfiguration
+            - org.springframework.boot.autoconfigure.graphql.data.GraphQlReactiveQueryByExampleAutoConfiguration
+            - org.springframework.boot.autoconfigure.graphql.data.GraphQlReactiveQuerydslAutoConfiguration
+            - org.springframework.boot.autoconfigure.graphql.reactive.GraphQlWebFluxAutoConfiguration
+            - org.springframework.boot.autoconfigure.graphql.rsocket.GraphQlRSocketAutoConfiguration
+            - org.springframework.boot.autoconfigure.graphql.rsocket.RSocketGraphQlClientAutoConfiguration
+            - org.springframework.boot.autoconfigure.graphql.security.GraphQlWebFluxSecurityAutoConfiguration
+            - org.springframework.boot.autoconfigure.graphql.security.GraphQlWebMvcSecurityAutoConfiguration
+            - org.springframework.boot.autoconfigure.graphql.servlet.GraphQlWebMvcAutoConfiguration
+            - org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration
+            - org.springframework.boot.autoconfigure.h2.H2ConsoleAutoConfiguration
+            - org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration
+            - org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration
+            - org.springframework.boot.autoconfigure.hazelcast.HazelcastJpaDependencyAutoConfiguration
+            - org.springframework.boot.autoconfigure.http.client.reactive.ClientHttpConnectorAutoConfiguration
+            - org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration
+            - org.springframework.boot.autoconfigure.integration.IntegrationAutoConfiguration
+            - org.springframework.boot.autoconfigure.jdbc.JdbcClientAutoConfiguration
+            - org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration
+            - org.springframework.boot.autoconfigure.jdbc.JndiDataSourceAutoConfiguration
+            - org.springframework.boot.autoconfigure.jdbc.XADataSourceAutoConfiguration
+            - org.springframework.boot.autoconfigure.jersey.JerseyAutoConfiguration
+            - org.springframework.boot.autoconfigure.jms.JmsAutoConfiguration
+            - org.springframework.boot.autoconfigure.jms.JndiConnectionFactoryAutoConfiguration
+            - org.springframework.boot.autoconfigure.jms.activemq.ActiveMQAutoConfiguration
+            - org.springframework.boot.autoconfigure.jms.artemis.ArtemisAutoConfiguration
+            - org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration
+            - org.springframework.boot.autoconfigure.jooq.JooqAutoConfiguration
+            - org.springframework.boot.autoconfigure.jsonb.JsonbAutoConfiguration
+            - org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration
+            - org.springframework.boot.autoconfigure.ldap.embedded.EmbeddedLdapAutoConfiguration
+            - org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+            - org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
+            - org.springframework.boot.autoconfigure.mail.MailSenderValidatorAutoConfiguration
+            - org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
+            - org.springframework.boot.autoconfigure.mongo.MongoReactiveAutoConfiguration
+            - org.springframework.boot.autoconfigure.mustache.MustacheAutoConfiguration
+            - org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration
+            - org.springframework.boot.autoconfigure.netty.NettyAutoConfiguration
+            - org.springframework.boot.autoconfigure.pulsar.PulsarAutoConfiguration
+            - org.springframework.boot.autoconfigure.pulsar.PulsarReactiveAutoConfiguration
+            - org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration
+            - org.springframework.boot.autoconfigure.r2dbc.R2dbcProxyAutoConfiguration
+            - org.springframework.boot.autoconfigure.r2dbc.R2dbcTransactionManagerAutoConfiguration
+            - org.springframework.boot.autoconfigure.reactor.ReactorAutoConfiguration
+            - org.springframework.boot.autoconfigure.rsocket.RSocketMessagingAutoConfiguration
+            - org.springframework.boot.autoconfigure.rsocket.RSocketRequesterAutoConfiguration
+            - org.springframework.boot.autoconfigure.rsocket.RSocketServerAutoConfiguration
+            - org.springframework.boot.autoconfigure.rsocket.RSocketStrategiesAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientWebSecurityAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientWebSecurityAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.oauth2.resource.reactive.ReactiveOAuth2ResourceServerAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.oauth2.server.servlet.OAuth2AuthorizationServerAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.oauth2.server.servlet.OAuth2AuthorizationServerJwtAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.rsocket.RSocketSecurityAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.saml2.Saml2RelyingPartyAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+            - org.springframework.boot.autoconfigure.sendgrid.SendGridAutoConfiguration
+            - org.springframework.boot.autoconfigure.session.SessionAutoConfiguration
+            - org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration
+            #- org.springframework.boot.autoconfigure.web.reactive.HttpHandlerAutoConfiguration
+            #- org.springframework.boot.autoconfigure.web.reactive.ReactiveMultipartAutoConfiguration
+            #- org.springframework.boot.autoconfigure.web.reactive.ReactiveWebServerFactoryAutoConfiguration
+            #- org.springframework.boot.autoconfigure.web.reactive.WebFluxAutoConfiguration
+            #- org.springframework.boot.autoconfigure.web.reactive.WebSessionIdResolverAutoConfiguration
+            #- org.springframework.boot.autoconfigure.web.reactive.error.ErrorWebFluxAutoConfiguration
+            - org.springframework.boot.autoconfigure.web.reactive.function.client.ClientHttpConnectorAutoConfiguration
+            - org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration
+            - org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration
+            - org.springframework.boot.autoconfigure.webservices.WebServicesAutoConfiguration
+            - org.springframework.boot.autoconfigure.webservices.client.WebServiceTemplateAutoConfiguration
+            - org.springframework.boot.autoconfigure.websocket.reactive.WebSocketReactiveAutoConfiguration
+            - org.springframework.boot.autoconfigure.websocket.servlet.WebSocketMessagingAutoConfiguration
+            
+            - org.springframework.boot.autoconfigure.aop.AopAutoConfiguration
+            - org.springframework.boot.autoconfigure.dao.PersistenceExceptionTranslationAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.web.SpringDataWebAutoConfiguration
+            - org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration
+            #- org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration
+            - org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration
+            #- org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration
+            - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+            - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+            - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+            - org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration
+            - org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration
+            - org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration
+            - org.springframework.boot.autoconfigure.task.TaskSchedulingAutoConfiguration
+            - org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration
+            - org.springframework.boot.autoconfigure.transaction.TransactionManagerCustomizationAutoConfiguration
+            - org.springframework.boot.autoconfigure.transaction.jta.JtaAutoConfiguration
+            - org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration
+            - org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration
+            - org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration
+            - org.springframework.boot.autoconfigure.web.embedded.EmbeddedWebServerFactoryCustomizerAutoConfiguration
+            - org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration
+            - org.springframework.boot.autoconfigure.web.servlet.HttpEncodingAutoConfiguration
+            - org.springframework.boot.autoconfigure.web.servlet.MultipartAutoConfiguration
+            - org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration
+            - org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration
+            - org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration
+            
+    ## (SBADMIN)
+    boot:
+        admin:
+            client:
+                instance:
+                    name: template-springboot-flux-3x
+                    service-url: http://localhost:5401/
+                enabled: true
+                period: 1000
+                url: http://localhost:9900
+                auto-registration: true
+                auto-deregistration: true
+            routes:
+                endpoints: auditevents, beans, caches, conditions, configprops, env, flyway, health, httpexchanges, info, integrationgraph, loggers, liquibase, metrics, mappings, quartz, scheduledtasks, sessions, shutdown, startup, threaddump, trace, heapdump, logfile, prometheus
+    #
+    # Ganti profile sesuai dengan database yang digunakan
+    #
+    profiles:
+        #active: "db2"
+        #active: "derby"
+        #active: "h2"
+        #active: "hsql"
+        #active: "mariadb"
+        active: "mysql"
+        #active: "oracle"
+        #active: "postgresql"
+        #active: "sqlserver"               
+#
+# MANAGEMENT (SBADMIN)
+#
+management:
+    health:
+        key:
+            enabled: true
+        probes:
+            enabled: true
+    endpoints:
+       web:
+           base-path: /_/actuator
+           enable:
+               include: true
+           exposure:
+               include: '*'
+    endpoint:
+        health:
+            enabled: true
+            show-details: always
+        startup:
+            access: unrestricted
+        shutdown:
+            access: unrestricted
+
+#
+# LOGGING
+#
+logging:
+    file:
+        name: './logs/template-springboot-flux-3x.log'
+    pattern:
+        console: '%d %p [%X{traceId}] %F\(%M:%L\) : %msg%n'
+        file: '%d %p [%X{traceId}] %F\(%M:%L\) : %msg%n'
+    level:
+        org:
+            hibernate: INFO
+            springframework: INFO
+            apache:
+                fory: 'OFF'
+        redis:
+            clients:
+                jedis:
+                    JedisFactory: 'OFF'
+        com:
+            fasterxml:
+                jackson:
+                    dataformat:
+                        xml: 'OFF'
+            zaxxer:
+                hikari:
+                    pool:
+                        ProxyConnection: ERROR
+        net:
+            ideahut:
+                springboot:
+                    bean: DEBUG
+
+#
+# CONFIG
+#
+config:
+    publicBaseUrl: ''
+    logAllError: true
+    binarySerializer: hessian2
+    autoStartScheduler: false
+    messagePath: 'file:{user.dir}/extras/message/'
+    reportPath: 'file:{user.dir}/extras/report/'
+
+    #
+    # LAUNCHER
+    #
+    launcher:
+        waitAllProcess: true
+        init:
+            mapper: true
+            validation: true
+            endpoint: true
+        log:
+            initHandler: true
+            beanInitialize: true
+            beanConfigure: true
+            beanShutdown: true
+            version: true
+            application: true
+        configure:
+            concurrency: 0
+            beans:
+                - net.ideahut.springboot.entity.EntityTrxManager
+                - net.ideahut.springboot.sysparam.SysParamHandler
+                - net.ideahut.springboot.audit.AuditHandler
+    
+    #
+    # FILTER
+    #
+    filter:
+        traceEnable: true
+        resultTimeEnable: true
+        resultTimeUnit: NANOSECONDS
+        headers:
+            Access-Control-Allow-Credentials: 'true'
+            Access-Control-Allow-Origin: '*'
+            Access-Control-Allow-Methods: '*'
+            Access-Control-Max-Age: '3600'
+            Access-Control-Allow-Headers: '*'
+            Access-Control-Expose-Headers: '*'
+    
+    #
+    # Model / Entity yang punya annotation @ForeignKeyEntity akan dieksekusi
+    # Beberapa database tidak support "... on update (CASCADE/SET_NULL)"
+    #
+    foreignKey:
+        enableExecution: true
+        dropBeforeCreate: true
+        onUpdateAction: true
+
+    #
+    # CRUD
+    # 
+    crud:
+        enableApiService: false
+        enablePermission: false
+        alwaysUseNative: false
+        defaultMaxLimit: 100
+        infoEnabled: true
+        bulkEnabled: true
+        maxBulkSize: 0
+        maxBulkLayer: 0
+
+    #
+    # AUDIT
+    #
+    audit:
+        useMultiTable: true
+        rejectNonAuditEntity: true
+        properties:
+            generate:
+                table: true
+            enable:
+                audit: true
+            table:
+                prefix: _a_
+
+    #
+    # TASK
+    #
+    task:
+        primary:
+            threadNamePrefix: TASK-PRIMARY
+            corePoolSize: 2
+            maxPoolSize: 8
+            waitForJobsToCompleteOnShutdown: true
+        audit:
+            threadNamePrefix: TASK-AUDIT
+            corePoolSize: 2
+            maxPoolSize: 8
+            waitForJobsToCompleteOnShutdown: true
+        rest:
+            threadNamePrefix: TASK-REST
+            corePoolSize: 16
+            maxPoolSize: 1000
+            waitForJobsToCompleteOnShutdown: true
+        webAsync:
+            threadNamePrefix: WEB-ASYNC
+            corePoolSize: 8
+            maxPoolSize: 100
+            waitForJobsToCompleteOnShutdown: true
+
+    #
+    # REDIS
+    #
+    redis:
+        primary:
+            type: 0
+            standalone:
+                host: '<HOST>'
+                port: '<PORT>'
+                password: '<PASSWORD>'
+                database: 0
+        access:
+            type: 0
+            standalone:
+                host: '<HOST>'
+                port: '<PORT>'
+                password: '<PASSWORD>'
+                database: 1
+                
+    #
+    # ADMIN
+    #
+    admin:
+        handler:
+            configurationFile: 'file:{user.dir}/extras/admin/configuration.yaml'
+            apiPath: /_/api
+            webPath: /_/web
+            webLocation: 'file:{user.dir}/extras/admin/web/'
+            webEnabled: true
+            storageKeyParam:
+                prefix: ADMIN-HANDLER
+                appIdEnabled: true
+                encryptEnabled: true
+        credential:
+            useLocalMemory: false
+            credentialFile: 'file:{user.dir}/extras/admin/credential.yaml'
+            
+            # LocalMemoryCredential
+            checkInterval:
+                unit: SECONDS
+                value: 30
+
+            # RedisMemoryCredential
+            storageKeyParam:
+                prefix: ADMIN-CREDENTIAL
+                appIdEnabled: true
+                encryptEnabled: true
+        security:
+            useBasicAuth: false
+
+            # Basic Auth
+            realm: Admin
+
+            # Admin Auth
+            enableRemoteHost: false
+            enableUserAgent: false
+            headerKey: Authorization
+
+    #
+    # API
+    #
+    api:
+        handler:
+            enableCrud: true
+            enableSync: true
+            enableConsumer: true
+            configureThreads: 2
+            redisParam:
+                prefix: API-HANDLER
+                appIdEnabled: true
+                encryptEnabled: true
+        service:
+            apiName: TEMPLATE-FLUX-3X
+            redisExpiry:
+                unit: MINUTES
+                accessNull: 2
+                accessObject: 5
+                consumerNull: 2
+                consumerObject: 10
+            redisParam:
+                prefix: API-SERVICE
+                appIdEnabled: true
+                encryptEnabled: true
+        token:
+            consumerTokenStorageIndex: 1
+            useApiTokenInProcessor: true
+            processorJwtParam:
+                secret: 77ea06ac-808b-4399-895c-a546b033d533
+                digest: SHA-256
+                expiry:
+                    unit: MINUTES
+                    value: 60
+            consumerJwtParam:
+                secret: df7c7d71-ec05-4ad4-9b36-1580b1a6590f
+                digest: SHA-256
+                expiry:
+                    unit: HOURS
+                    value: 24
+            ## toleransi waktu atas/bawah timestamp
+            signatureTimeSpan:
+                unit: SECONDS
+                value: 60
+    
+    #
+    # REST
+    #
+    rest:
+        clientDestroyable: true
+        enableExecutionTime: true
+        enableRequestLimit: true
+        defaultRestClient:
+            # set false jika menggunakan proxy
+            noProxy: true
+            proxy:
+                # DIRECT / HTTP / SOCKS
+                type: DIRECT
+                port:
+                username:
+                password:
+                authorization:
+            followRedirects: true
+            timeout:
+                timeUnit: SECONDS
+                connect: 10
+                call:
+                read: 30
+                write:
+    
+    #
+    # CACHE         
+    #
+    cache:
+        useLocalMemory: false
+        redisParam:
+            prefix: CACHE
+            appIdEnabled: true
+            encryptEnabled: true
+        groups:
+            -
+                name: TEST1
+                limit: 20
+                expiry:
+                    unit: SECONDS
+                    value: 3600
+                nullable: true
+            -
+                name: TEST2
+                limit: -1
+                expiry:
+                    unit: SECONDS
+                    value: 0
+                nullable: true
+
+    #
+    # GRID
+    #
+    grid:
+        useLocalMemory: false
+        storageKeyParam:
+            appIdEnabled: true
+            encryptEnabled: true
+        location: 'file:{user.dir}/extras/grid/**/*.json'
+        #definition: 'file:{user.dir}/extras/grid/grid.def'
+    
+    #
+    # MAIL
+    #
+    mail:
+        host: 'smtp.gmail.com'
+        port: 587
+        username: '<USERNAME>'
+        password: '<PASSWORD>'
+        properties:
+            mail.smtp.host: smtp.gmail.com
+            mail.smtp.ssl.trust: smtp.gmail.com
+            mail.smtp.port: 587
+            mail.smtp.auth: true
+            mail.smtp.starttls.enable: true
+            mail.imap.ssl.enable: true
+            mail.transport.protocol: smtp
+            mail.debug: true
+            mail.smtp.ssl.protocols: TLSv1.2
+
+    #
+    # KAFKA
+    #
+    kafka:
+        kafkaEnabled: true
+        configurationFile: 'file:{user.dir}/extras/kafka/localhost.yaml'
+        deleteUnusedGroupAndTopic: true
+        reloadEnabled: true
+        broadcastEnabled: true
+        broadcastTopic: 'template-flux-3x'
+
+    #
+    # TRX MANAGER
+    #
+    trxManager:
+        primary:
+            datasource:
+                # Type datasource bisa diubah-ubah, pilihan: HIKARI / AGROAL / DBCP / BASIC
+                # Untuk JNDI bisa menambahkan 'jndiName' di type 'BASIC'
+                type: HIKARI
+                hikari:
+                    connectionTimeout:
+                        unit: 'MILLISECONDS'
+                        value: 15000
+                    minimumIdle: 10
+                    maximumPoolSize: 10
+                    idleTimeout:
+                        unit: 'MILLISECONDS'
+                        value: 600000
+                    maxLifetime:
+                        unit: 'MILLISECONDS'
+                        value: 1800000
+                    poolName: PrimaryMainPool
+                    enableVirtualThread: true
+                agroal:
+                    initialSize: 10
+                    maxSize: 10
+                    minSize: 10
+                dbcp:
+                    testWhileIdle: true
+                    initialSize: 10
+                    maxIdle: 10
+                    maxTotal: 10
+                    jmxName: 'PrimaryDataSource'
+                basic:
+                    #jndiName: 'PrimaryDataSource'
+            settings:
+                hibernate:
+                    hbm2ddl:
+                        auto: update
+                    show_sql: true
+                    generate_statistics: true
+            useReflection: false
+            entityPackages:
+                - net.ideahut.springboot.api.entity
+                - net.ideahut.springboot.job.entity
+                - net.ideahut.springboot.message.entity
+                - net.ideahut.springboot.sysparam.entity
+                - net.ideahut.springboot.template.entity
+            entityClasses:
+                - net.ideahut.springboot.entity.replica.ReplicaInfo
+                
+                #
+                # Aktifkan daftar entity di bawah pada saat jalan sebagai native
+                # Package scanning tidak berfungsi di native image.
+                #
+                
+                # API
+                #- net.ideahut.springboot.api.entity.ApiConnect
+                #- net.ideahut.springboot.api.entity.ApiConnectRole
+                #- net.ideahut.springboot.api.entity.ApiCrud
+                #- net.ideahut.springboot.api.entity.ApiCrudExclude
+                #- net.ideahut.springboot.api.entity.ApiCrudField
+                #- net.ideahut.springboot.api.entity.ApiItemCrud
+                #- net.ideahut.springboot.api.entity.ApiItemRequest
+                #- net.ideahut.springboot.api.entity.ApiProvider
+                #- net.ideahut.springboot.api.entity.ApiProviderConfig
+                #- net.ideahut.springboot.api.entity.ApiProviderCrud
+                #- net.ideahut.springboot.api.entity.ApiProviderCrudAction
+                #- net.ideahut.springboot.api.entity.ApiProviderCrudFilter
+                #- net.ideahut.springboot.api.entity.ApiProviderHost
+                #- net.ideahut.springboot.api.entity.ApiProviderRequest
+                #- net.ideahut.springboot.api.entity.ApiRole
+                #- net.ideahut.springboot.api.entity.ApiRoleCrud
+                #- net.ideahut.springboot.api.entity.ApiRoleCrudAction
+                #- net.ideahut.springboot.api.entity.ApiRoleCrudFilter
+                #- net.ideahut.springboot.api.entity.ApiRoleRequest
+                
+                # JOB
+                #- net.ideahut.springboot.job.entity.JobGroup
+                #- net.ideahut.springboot.job.entity.JobInstance
+                #- net.ideahut.springboot.job.entity.JobTrigger
+                #- net.ideahut.springboot.job.entity.JobTriggerConfig
+                #- net.ideahut.springboot.job.entity.JobType
+                #- net.ideahut.springboot.job.entity.JobTypeParam
+                
+                # MESSAGE
+                #- net.ideahut.springboot.message.entity.Language
+                #- net.ideahut.springboot.message.entity.Message
+                
+                # SYSPARAM
+                #- net.ideahut.springboot.sysparam.entity.SysParam
+                
+                # APPLICATION
+                #- net.ideahut.springboot.template.entity.AutoGenLongIdHardDel
+                #- net.ideahut.springboot.template.entity.AutoGenStrIdHardDel
+                #- net.ideahut.springboot.template.entity.AutoGenStrIdSoftDel
+                #- net.ideahut.springboot.template.entity.CompositeHardDel
+                #- net.ideahut.springboot.template.entity.CompositeSoftDel
+                #- net.ideahut.springboot.template.entity.EmbeddedHardDel
+                #- net.ideahut.springboot.template.entity.EmbeddedSoftDel
+                #- net.ideahut.springboot.template.entity.EmbeddedWithoutAttribute
+                #- net.ideahut.springboot.template.entity.Information
+                #- net.ideahut.springboot.template.entity.InformationLink
+                #- net.ideahut.springboot.template.entity.IntegerIdWithBytes
+                #- net.ideahut.springboot.template.entity.LongIdJoinComposite
+                #- net.ideahut.springboot.template.entity.LongIdJoinEmbedded
+                #- net.ideahut.springboot.template.entity.ManualGenStrIdSoftDel
+                #- net.ideahut.springboot.template.entity.Menu
+                #- net.ideahut.springboot.template.entity.MenuRole
+                #- net.ideahut.springboot.template.entity.Role
+                #- net.ideahut.springboot.template.entity.User
+                #- net.ideahut.springboot.template.entity.UserDetail
+                #- net.ideahut.springboot.template.entity.UserFavorite
+                
+            audit:
+                id: template_springboot_flux_1
+                datasource:
+                    type: HIKARI
+                    hikari:
+                        poolName: PrimaryAuditPool
+                        enableVirtualThread: true
+                settings:
+                    hibernate:
+                        show_sql: true
+                        generate_statistics: true 
+
+        secondary:
+            datasource:
+                type: HIKARI
+                hikari:
+                    connectionTimeout:
+                        unit: 'MILLISECONDS'
+                        value: 15000
+                    minimumIdle: 10
+                    maximumPoolSize: 10
+                    idleTimeout:
+                        unit: 'MILLISECONDS'
+                        value: 600000
+                    maxLifetime:
+                        unit: 'MILLISECONDS'
+                        value: 1800000
+                    poolName: SecondaryMainPool
+                    enableVirtualThread: true
+            settings:
+                hibernate:
+                    hbm2ddl:
+                        auto: update
+                    show_sql: true
+                    generate_statistics: true
+            useReflection: false
+            entityClasses:
+                - net.ideahut.springboot.template.entity.Information
+                - net.ideahut.springboot.template.entity.CompositeHardDel
+            audit:
+                id: template_springboot_flux_2
+                datasource:
+                    type: HIKARI
+                    hikari:
+                        poolName: SecondaryAuditPool
+                        enableVirtualThread: true
+                settings:
+                    hibernate:
+                        show_sql: true
+                        generate_statistics: true
