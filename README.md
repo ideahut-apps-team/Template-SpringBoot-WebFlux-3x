@@ -78,7 +78,7 @@
     </dependency>
     -->
     ```
-* Beberapa __dependency__ tidak diaktifkan, agar proses _build_ __Native Image__ tidak terlalu lama dan mengkonsumsi memory terlalu besar.
+* Beberapa __dependency__ tidak diaktifkan, agar proses _build_ __Native Image__ tidak terlalu lama dan tidak mengkonsumsi memori terlalu besar.
 
 ##
 
