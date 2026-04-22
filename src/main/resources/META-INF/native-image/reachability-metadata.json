@@ -53940,15 +53940,11 @@
   }, {
     "glob" : "application-mysql.yaml"
   }, {
-    "glob" : "application-mysql.yml"
-  }, {
     "glob" : "application.properties"
   }, {
     "glob" : "application.xml"
   }, {
     "glob" : "application.yaml"
-  }, {
-    "glob" : "application.yml"
   }, {
     "glob" : "ch/qos/logback/classic/logback-classic-version.properties"
   }, {
@@ -53966,15 +53962,11 @@
   }, {
     "glob" : "config/application-mysql.yaml"
   }, {
-    "glob" : "config/application-mysql.yml"
-  }, {
     "glob" : "config/application.properties"
   }, {
     "glob" : "config/application.xml"
   }, {
     "glob" : "config/application.yaml"
-  }, {
-    "glob" : "config/application.yml"
   }, {
     "glob" : "hibernate.properties"
   }, {

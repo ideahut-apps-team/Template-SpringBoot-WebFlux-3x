@@ -29,7 +29,7 @@ import net.ideahut.springboot.redis.RedisProperties;
 import net.ideahut.springboot.task.TaskProperties;
 
 /*
- * Class properties yang definisinya sama dengan application.yml
+ * Class properties yang definisinya sama dengan application.yaml
  */
 @Configuration
 @ConfigurationProperties(prefix = AppProperties.PREFIX)
