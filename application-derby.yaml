@@ -1,0 +1,48 @@
+config:    
+    #
+    # TRX MANAGER
+    #
+    trxManager:
+        primary:
+            datasource:
+                hikari:
+                    driverClassName: 'org.apache.derby.jdbc.ClientDriver'
+                    jdbcUrl: 'jdbc:derby://<HOST>:<PORT>/template_springboot_flux_main_1;create=true'
+                    username: '<USERNAME>'
+                    password: '<PASSWORD>'
+                agroal:
+                    jdbcUrl: 'jdbc:derby://<HOST>:<PORT>/template_springboot_flux_main_1;create=true'
+                    username: '<USERNAME>'
+                    password: '<PASSWORD>'
+                dbcp:
+                    driverClassName: 'org.apache.derby.jdbc.ClientDriver'
+                    jdbcUrl: 'jdbc:derby://<HOST>:<PORT>/template_springboot_flux_main_1;create=true'
+                    username: '<USERNAME>'
+                    password: '<PASSWORD>'
+                basic:
+                    driverClassName: 'org.apache.derby.jdbc.ClientDriver'
+                    jdbcUrl: 'jdbc:derby://<HOST>:<PORT>/template_springboot_flux_main_1;create=true'
+                    username: '<USERNAME>'
+                    password: '<PASSWORD>'
+            audit:
+                datasource:
+                    hikari:
+                        driverClassName: 'org.apache.derby.jdbc.ClientDriver'
+                        jdbcUrl: 'jdbc:derby://<HOST>:<PORT>/template_springboot_flux_audit_1;create=true'
+                        username: '<USERNAME>'
+                        password: '<PASSWORD>'
+
+        secondary:
+            datasource:
+                hikari:
+                    driverClassName: 'org.apache.derby.jdbc.ClientDriver'
+                    jdbcUrl: 'jdbc:derby://<HOST>:<PORT>/template_springboot_flux_main_2;create=true'
+                    username: '<USERNAME>'
+                    password: '<PASSWORD>'
+            audit:
+                datasource:
+                    hikari:
+                        driverClassName: 'org.apache.derby.jdbc.ClientDriver'
+                        jdbcUrl: 'jdbc:derby://<HOST>:<PORT>/template_springboot_flux_audit_2;create=true'
+                        username: '<USERNAME>'
+                        password: '<PASSWORD>'
