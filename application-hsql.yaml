@@ -1,0 +1,48 @@
+config:    
+    #
+    # TRX MANAGER
+    #
+    trxManager:
+        primary:
+            datasource:
+                hikari:
+                    driverClassName: 'org.hsqldb.jdbc.JDBCDriver'
+                    jdbcUrl: 'jdbc:hsqldb:hsql://<HOST>:<PORT>/template_springboot_flux_main_1;DB_CLOSE_DELAY=-1'
+                    username: '<USERNAME>'
+                    password: '<PASSWORD>'
+                agroal:
+                    jdbcUrl: 'jdbc:hsqldb:hsql://<HOST>:<PORT>/template_springboot_flux_main_1;DB_CLOSE_DELAY=-1'
+                    username: '<USERNAME>'
+                    password: '<PASSWORD>'
+                dbcp:
+                    driverClassName: 'org.hsqldb.jdbc.JDBCDriver'
+                    jdbcUrl: 'jdbc:hsqldb:hsql://<HOST>:<PORT>/template_springboot_flux_main_1;DB_CLOSE_DELAY=-1'
+                    username: '<USERNAME>'
+                    password: '<PASSWORD>'
+                basic:
+                    driverClassName: 'org.hsqldb.jdbc.JDBCDriver'
+                    jdbcUrl: 'jdbc:hsqldb:hsql://<HOST>:<PORT>/template_springboot_flux_main_1;DB_CLOSE_DELAY=-1'
+                    username: '<USERNAME>'
+                    password: '<PASSWORD>'
+            audit:
+                datasource:
+                    hikari:
+                        driverClassName: 'org.hsqldb.jdbc.JDBCDriver'
+                        jdbcUrl: 'jdbc:hsqldb:hsql://<HOST>:<PORT>/template_springboot_flux_audit_1;DB_CLOSE_DELAY=-1'
+                        username: '<USERNAME>'
+                        password: '<PASSWORD>'
+
+        secondary:
+            datasource:
+                hikari:
+                    driverClassName: 'org.hsqldb.jdbc.JDBCDriver'
+                    jdbcUrl: 'jdbc:hsqldb:hsql://<HOST>:<PORT>/template_springboot_flux_main_2;DB_CLOSE_DELAY=-1'
+                    username: '<USERNAME>'
+                    password: '<PASSWORD>'
+            audit:
+                datasource:
+                    hikari:
+                        driverClassName: 'org.hsqldb.jdbc.JDBCDriver'
+                        jdbcUrl: 'jdbc:hsqldb:hsql://<HOST>:<PORT>/template_springboot_flux_audit_2;DB_CLOSE_DELAY=-1'
+                        username: '<USERNAME>'
+                        password: '<PASSWORD>'
