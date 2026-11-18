@@ -1,11 +1,15 @@
 package net.ideahut.springboot.template.controller;
 
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +26,9 @@ import net.ideahut.springboot.crud.CrudHandler;
 import net.ideahut.springboot.crud.CrudPermission;
 import net.ideahut.springboot.crud.CrudResource;
 import net.ideahut.springboot.crud.WebFluxCrudController;
+import net.ideahut.springboot.helper.ErrorHelper;
+import net.ideahut.springboot.helper.StringHelper;
+import net.ideahut.springboot.helper.WebFluxHelper;
 import net.ideahut.springboot.object.Result;
 import net.ideahut.springboot.task.TaskHandler;
 import reactor.core.publisher.Mono;
@@ -32,12 +39,28 @@ import reactor.core.publisher.Mono;
  * Untuk di level Controller hanya akan berlaku di setiap pemanggilan endpoint Crud
  */
 
-//@Public(always = true)
 @Public
 @ComponentScan
 @RestController
 @RequestMapping("/crud")
 class CrudController extends WebFluxCrudController {
+	
+	private static final Map<String, Collection<CrudAction>> METHOD_CRUD_ACTIONS;
+	static {
+		METHOD_CRUD_ACTIONS = new HashMap<>();
+		METHOD_CRUD_ACTIONS.put(HttpMethod.GET.name(), Arrays.asList(
+			CrudAction.UNIQUE, CrudAction.SINGLE, CrudAction.PAGE, CrudAction.LIST, CrudAction.MAP
+		));
+		METHOD_CRUD_ACTIONS.put(HttpMethod.POST.name(), Arrays.asList(
+			CrudAction.CREATE, CrudAction.CREATES, CrudAction.SAVE, CrudAction.SAVES
+		));
+		METHOD_CRUD_ACTIONS.put(HttpMethod.PUT.name(), Arrays.asList(
+			CrudAction.UPDATE, CrudAction.UPDATES, CrudAction.SAVE, CrudAction.SAVES
+		));
+		METHOD_CRUD_ACTIONS.put(HttpMethod.DELETE.name(), Arrays.asList(
+			CrudAction.DELETE, CrudAction.DELETES
+		));
+	}
 	
 	private final CrudHandler crudHandler;
 	private final CrudResource crudResource;
@@ -77,10 +100,9 @@ class CrudController extends WebFluxCrudController {
 	/*
 	 * CONSTANT
 	 */
-	@Override
 	@GetMapping(value = "/constant")
-	protected Result constant() {
-		return super.constant();
+	public Mono<Result> constantMono() {
+		return Mono.just(super.constant());
 	}
 	
 	/*
@@ -88,7 +110,7 @@ class CrudController extends WebFluxCrudController {
 	 */
 	@Override
 	@PostMapping(value = "/bulk/list")
-	protected Mono<List<Result>> bulkList(
+	public Mono<List<Result>> bulkList(
 		ServerHttpRequest httpRequest
 	) {
 		return super.bulkList(httpRequest);
@@ -99,7 +121,7 @@ class CrudController extends WebFluxCrudController {
 	 */
 	@Override
 	@PostMapping(value = "/bulk/map")
-	protected Mono<Map<String, Result>> bulkMap(
+	public Mono<Map<String, Result>> bulkMap(
 		ServerHttpRequest httpRequest
 	) {
 		return super.bulkMap(httpRequest);
@@ -109,7 +131,7 @@ class CrudController extends WebFluxCrudController {
 	 * ACTION
 	 */
 	@PostMapping(value = "/action/{action}")
-	protected Mono<Result> action(
+	public Mono<Result> action(
 		@PathVariable("action") String action,
 		ServerHttpRequest httpRequest
 	) {
@@ -128,11 +150,24 @@ class CrudController extends WebFluxCrudController {
 			RequestMethod.DELETE 
 		}
 	)
-	protected Result parameter(
+	public Mono<Result> parameter(
 		@PathVariable("action") String action,
 		ServerHttpRequest httpRequest
 	) {
-		return super.parameter(CrudAction.of(action), httpRequest);		
+		return WebFluxHelper.fromCallable(() -> {
+			String httpMethod = httpRequest.getMethod().name();
+			CrudAction crudAction = CrudAction.of(action);
+			Collection<CrudAction> crudActions = METHOD_CRUD_ACTIONS.get(httpMethod);
+			ErrorHelper.throwEmpty(
+				crudActions, 
+				() -> StringHelper.format("Unsupported method: {}", httpMethod)
+			);
+			ErrorHelper.throwIf(
+				!crudActions.contains(crudAction), 
+				() -> StringHelper.format("Invald action: {} for method: {}", crudAction, httpMethod)
+			);
+			return super.parameter(crudAction, httpRequest);
+		}).flatMap(r -> r);
 	}
 	
 	/*
@@ -140,7 +175,7 @@ class CrudController extends WebFluxCrudController {
 	 */
 	@Override
 	@GetMapping(value = "/rest")
-	protected Result single(
+	public Mono<Result> single(
 		ServerHttpRequest httpRequest
 	) {
 		return super.single(httpRequest);
@@ -151,7 +186,7 @@ class CrudController extends WebFluxCrudController {
 	 */
 	@Override
 	@GetMapping(value = "/rest/page")
-	protected Result page(
+	public Mono<Result> page(
 		ServerHttpRequest httpRequest		
 	) {
 		return super.page(httpRequest);
@@ -162,7 +197,7 @@ class CrudController extends WebFluxCrudController {
 	 */
 	@Override
 	@PostMapping(value = "/rest")
-	protected Mono<Result> create(
+	public Mono<Result> create(
 		ServerHttpRequest httpRequest
 	) {
 		return super.create(httpRequest);
@@ -173,7 +208,7 @@ class CrudController extends WebFluxCrudController {
 	 */
 	@Override
 	@PutMapping(value = "/rest")
-	protected Mono<Result> update(
+	public Mono<Result> update(
 		ServerHttpRequest httpRequest
 	) {
 		return super.update(httpRequest);
@@ -184,7 +219,7 @@ class CrudController extends WebFluxCrudController {
 	 */
 	@Override
 	@DeleteMapping(value = "/rest")
-	protected Result delete(
+	public Mono<Result> delete(
 		ServerHttpRequest httpRequest
 	) {
 		return super.delete(httpRequest);

@@ -1,7 +1,7 @@
 {
-    "order": 1,
+    "order": 2,
     "name": "ApiCrud",
-    "title": "CRUD Resource",
+    "title": "CRUD",
     "crud": {
         "name": "net.ideahut.springboot.api.entity.ApiCrud"
     },
@@ -278,15 +278,7 @@
                 "separator": "cell",
                 "selection": "single",
                 "page": {
-                    "options": [
-                        5,
-                        10,
-                        15,
-                        20,
-                        25,
-                        30,
-                        50
-                    ],
+                    "options": [5, 10, 15, 20, 25, 30, 50],
                     "default": 20,
                     "count": false
                 },
@@ -393,15 +385,7 @@
                 "separator": "cell",
                 "selection": "multiple",
                 "page": {
-                    "options": [
-                        5,
-                        10,
-                        15,
-                        20,
-                        25,
-                        30,
-                        50
-                    ],
+                    "options": [5, 10, 15, 20, 25, 30, 50],
                     "default": 20,
                     "count": false
                 },
@@ -492,15 +476,7 @@
                 "separator": "cell",
                 "selection": "multiple",
                 "page": {
-                    "options": [
-                        5,
-                        10,
-                        15,
-                        20,
-                        25,
-                        30,
-                        50
-                    ],
+                    "options": [5, 10, 15, 20, 25, 30, 50],
                     "default": 20,
                     "count": false
                 },

@@ -138,7 +138,7 @@ public class AppProperties {
 		private DbcpDefinition dbcp;
 		public static DatasourceDefinition getDefinition(TrxDatasource datasource) {
 			if (datasource != null) {
-				Type type = ObjectHelper.useOrDefault(datasource.getType(), () -> Type.BASIC);
+				Type type = ObjectHelper.useOrDefault(datasource.getType(), Type.BASIC);
 				switch (type) {
 				case HIKARI:
 					return datasource.getHikari();

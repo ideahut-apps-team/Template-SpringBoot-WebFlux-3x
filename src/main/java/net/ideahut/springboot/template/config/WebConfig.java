@@ -11,6 +11,10 @@ import net.ideahut.springboot.admin.AdminHandler;
 import net.ideahut.springboot.config.WebFluxConfig;
 import net.ideahut.springboot.object.TimeValue;
 
+/*
+ * Konfigurasi Web Flux
+ * 
+ */
 @Configuration
 @EnableWebFlux
 class WebConfig extends WebFluxConfig {
@@ -23,7 +27,10 @@ class WebConfig extends WebFluxConfig {
 	) {
 		this.adminHandler = adminHandler;
 	}
-
+	
+	/*
+	 * Resource Handlers
+	 */
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		if (adminHandler.isWebEnabled() && !registry.hasMappingForPattern(adminHandler.getWebPath() + "/**")) {
@@ -31,7 +38,7 @@ class WebConfig extends WebFluxConfig {
 			registry
 			.addResourceHandler(adminHandler.getWebPath() + "/**")
 			.addResourceLocations(adminHandler.getWebLocation())
-			.setCacheControl(CacheControl.maxAge(maxAge.getValue(), maxAge.getUnit()))
+			.setCacheControl(CacheControl.maxAge(maxAge.getValue(), maxAge.getTimeUnit()))
 	        .resourceChain(adminHandler.isWebResourceChain())
 	        .addResolver(new VersionResourceResolver().addContentVersionStrategy(adminHandler.getWebPath() + "/**"));
 		}

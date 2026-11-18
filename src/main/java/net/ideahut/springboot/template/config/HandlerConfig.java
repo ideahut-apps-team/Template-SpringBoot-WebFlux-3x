@@ -126,8 +126,9 @@ class HandlerConfig {
 	CacheGroupHandler cacheGroupHandler(
 		AppProperties appProperties,
 		BinarySerializer binarySerializer,
+		@Qualifier(AppConstant.Bean.Redis.PRIMARY)
 		RedisTemplate<String, byte[]> redisTemplate,
-		@Qualifier(AppConstant.Bean.Task.PRIMARY) 
+		@Qualifier(AppConstant.Bean.Task.PRIMARY)
 		TaskHandler taskHandler
 	) {
 		CacheGroupDefinition cache = ObjectHelper.useOrDefault(
@@ -213,6 +214,7 @@ class HandlerConfig {
 	GridHandler gridHandler(
 		AppProperties appProperties,
 		BinarySerializer binarySerializer,
+		@Qualifier(AppConstant.Bean.Redis.PRIMARY)
 		RedisTemplate<String, byte[]> redisTemplate
 	) {
 		GridDefinition grid = ObjectHelper.useOrDefault(
@@ -253,6 +255,7 @@ class HandlerConfig {
 	@Bean
 	SysParamHandler sysParamHandler(
 		BinarySerializer binarySerializer,
+		@Qualifier(AppConstant.Bean.Redis.PRIMARY)
 		RedisTemplate<String, byte[]> redisTemplate,
 		EntityTrxManager entityTrxManager
 	) {

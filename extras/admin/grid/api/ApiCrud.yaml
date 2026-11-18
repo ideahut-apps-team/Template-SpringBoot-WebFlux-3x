@@ -1,6 +1,6 @@
-order: 1
+order: 2
 name: ApiCrud
-title: CRUD Resource
+title: CRUD
 crud:
     name: net.ideahut.springboot.api.entity.ApiCrud
 id:

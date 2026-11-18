@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.ideahut.springboot.annotation.Audit;
 import net.ideahut.springboot.entity.EntityAudit;
+import net.ideahut.springboot.helper.StringHelper;
 
 @Audit
 @Entity
@@ -38,7 +39,7 @@ public class IntegerIdWithBytes extends EntityAudit {
 	
 	public void setData(String data) {
 		this.data = data;
-		this.bytes = data != null ? data.getBytes() : null;
+		this.bytes = StringHelper.toBytes(data);
 	}
 	
 	public IntegerIdWithBytes() {}

@@ -12,10 +12,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import net.ideahut.springboot.annotation.Public;
-import net.ideahut.springboot.object.StringList;
-import net.ideahut.springboot.object.StringMap;
-import net.ideahut.springboot.object.StringSet;
+import net.ideahut.springboot.helper.WebFluxHelper;
+import net.ideahut.springboot.object.ListString;
+import net.ideahut.springboot.object.MapString;
+import net.ideahut.springboot.object.SetString;
 import net.ideahut.springboot.template.service.MessageService;
+import reactor.core.publisher.Mono;
 
 /*
  * API untuk mendapatkan message yang tersimpan di resource & database
@@ -36,23 +38,23 @@ class MessageController {
 	}
 
 	@GetMapping(value = "/mobile")
-	JsonNode mobile() {
-		return messageService.getResource("mobile");
+	public Mono<JsonNode> mobile() {
+		return WebFluxHelper.fromCallable(() -> messageService.getResource("mobile"));
 	}
 	
 	@GetMapping(value = "/portal")
-	JsonNode portal() {
-		return messageService.getResource("portal");
+	public Mono<JsonNode> portal() {
+		return WebFluxHelper.fromCallable(() -> messageService.getResource("portal"));
 	}
 	
 	@PostMapping(value = "/translate/map")
-	StringMap translateMap(@RequestBody StringSet codes) {
-		return messageService.getMap(codes.toArray(new String[0]));
+	public Mono<MapString> translateMap(@RequestBody SetString codes) {
+		return WebFluxHelper.fromCallable(() -> messageService.getMap(codes.toArray(new String[0])));
 	}
 	
 	@PostMapping(value = "/translate/list")
-	StringList translateList(@RequestBody StringList codes) {
-		return messageService.getList(codes.toArray(new String[0]));
+	public Mono<ListString> translateList(@RequestBody ListString codes) {
+		return WebFluxHelper.fromCallable(() -> messageService.getList(codes.toArray(new String[0])));
 	}
 	
 }

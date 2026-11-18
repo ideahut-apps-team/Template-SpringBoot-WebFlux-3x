@@ -6,13 +6,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import lombok.extern.slf4j.Slf4j;
 import net.ideahut.springboot.admin.AdminHandler;
 import net.ideahut.springboot.admin.AdminHandlerImpl;
 import net.ideahut.springboot.admin.WebFluxAdminSecurity;
 import net.ideahut.springboot.definition.AdminDefinition;
 import net.ideahut.springboot.helper.ObjectHelper;
 import net.ideahut.springboot.mapper.DataMapper;
-import net.ideahut.springboot.module.ModuleAdmin;
 import net.ideahut.springboot.redis.RedisParam;
 import net.ideahut.springboot.rest.RestHandler;
 import net.ideahut.springboot.security.LocalMemoryCredential;
@@ -31,13 +31,14 @@ import net.ideahut.springboot.template.support.GridSupport;
  * http://<host>:<port>/_/web
  */
 
+@Slf4j
 @Configuration
 class AdminConfig {
 	
 	/*
 	 * ADMIN HANDLER
 	 */
-	@Bean()
+	@Bean
 	AdminHandler adminHandler(
 		AppProperties appProperties,
 		ApplicationContext applicationContext,
@@ -54,8 +55,10 @@ class AdminConfig {
 		
 		return new AdminHandlerImpl()
 				
-		// Memperbaharui data-data di javascript & html resource admin sesuai dengan konfigurasi, seperti: judul, timeout, dll
-		.setAfterReload(h -> ModuleAdmin.afterReload(h, applicationContext, ""))
+		// Custom memperbaharui data-data di javascript & html resource admin sesuai dengan konfigurasi, seperti: judul, timeout, dll
+		// Default sudah tersedia
+		/** .setAfterReload(h -> { try { ModuleAdmin.afterReload(h, ""); } catch (Exception e) { log.error("ModuleAdmin.afterReload", e); } }) */
+		.setAfterReload(null)
 		
 		// Path untuk mengakses API Admin
 		.setApiPath(handler.getApiPath())
@@ -63,8 +66,8 @@ class AdminConfig {
 		// Serialize & deserialize byte array ke redis
 		.setBinarySerializer(binarySerializer)
 		
-		// Custom cek token ke central, secara default sudah tersedia
-		//.setCheckTokenCentral(null)
+		// Custom ambil user ke central berdasarkan token, secara default sudah tersedia
+		.setCentralUser(null)
 		
 		// Lokasi konfigurasi file untuk fitur admin
 		.setConfigurationFile(handler.getConfigurationFile())
@@ -85,7 +88,7 @@ class AdminConfig {
 		.setRedisTemplate(redisTemplate)
 		
 		// Menggunakan nama bean, jika RequestMappingHandlerMapping di application context lebih dari satu
-		//.setRequestMappingHandlerMappingBeanName(null)
+		.setRequestMappingHandlerMappingBeanName(null)
 		
 		// Untuk sinkronisasi ke central
 		.setRestHandler(restHandler)
@@ -93,8 +96,8 @@ class AdminConfig {
 		// Mekanisme penyimpanan key di storage (redis / local memory)
 		.setStorageKeyParam(handler.getStorageKeyParam())
 		
-		// Custom sinkronisasi ke central, secara default sudah tersedia 
-		//.setSyncToCentral(null)
+		// Custom sinkronisasi ke central untuk mengambil template terbaru, secara default sudah tersedia
+		.setCentralSync(null)
 		
 		// Umur cache resource Admin UI
 		.setWebCacheMaxAge(handler.getWebCacheMaxAge())
@@ -107,6 +110,10 @@ class AdminConfig {
 		
 		// Context Path untuk mengakses Admin UI
 		.setWebPath(handler.getWebPath())
+		
+		// File index web
+		// default: index.html
+		.setWebIndex(handler.getWebIndex())
 		
 		// Flag resource chain atau tidak
 		.setWebResourceChain(handler.getWebResourceChain());

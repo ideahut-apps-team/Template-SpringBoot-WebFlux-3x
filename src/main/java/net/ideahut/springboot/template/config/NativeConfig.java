@@ -14,9 +14,8 @@ import org.springframework.context.annotation.ImportRuntimeHints;
 
 import lombok.extern.slf4j.Slf4j;
 import net.ideahut.springboot.helper.NativeImageHelper;
-import net.ideahut.springboot.helper.ObjectHelper;
 import net.ideahut.springboot.module.ModuleApi;
-import net.ideahut.springboot.object.StringSet;
+import net.ideahut.springboot.object.SetString;
 import net.ideahut.springboot.serializer.DataMapperBinarySerializer;
 import net.ideahut.springboot.serializer.HessianBinarySerializer;
 import net.ideahut.springboot.serializer.JdkBinarySerializer;
@@ -45,14 +44,13 @@ public class NativeConfig {
 	//private static final File metadataFile = new File("src/main/resources/META-INF/native-image/"); //-
 	
 	public static void registerToNativeImageAgent(ApplicationContext applicationContext) {
-		ObjectHelper.runIf(
-			NativeImageHelper.isAgentEnabled(), 
-			() -> NativeImageHelper.registerMetadata(collectClasses(applicationContext), serializationFile)
-		);
+		if (NativeImageHelper.isAgentEnabled()) {
+			NativeImageHelper.registerMetadata(collectClasses(applicationContext), serializationFile);
+		}
 	}
 	
 	private static Collection<Class<?>> collectClasses(ApplicationContext applicationContext) {
-		StringSet names = new StringSet(NativeImageHelper.Module.allModuleClassNames(applicationContext));
+		SetString names = new SetString(NativeImageHelper.Module.allModuleClassNames(applicationContext));
 		names.addAll(NativeImageHelper.Module.getJsonWebTokenClassNames());
 		names.addAll(NativeImageHelper.allClassNameInPackage(
 			false, 
@@ -65,13 +63,12 @@ public class NativeConfig {
 			Application.Package.APPLICATION + ".job",
 			Application.Package.APPLICATION + ".listener",
 			Application.Package.APPLICATION + ".object",
-			Application.Package.APPLICATION + ".properties",
 			Application.Package.APPLICATION + ".repo",
 			Application.Package.APPLICATION + ".service"
 		));
 		
 		Set<Class<?>> classes = new LinkedHashSet<>(NativeImageHelper.convertToClasses(names));
-		NativeImageHelper.addToClasses(classes, true, ModuleApi.getDefaultProcessors().toArray(new Class<?>[0]));
+		NativeImageHelper.addToClasses(classes, true, ModuleApi.getDefaultApiRoleGates().toArray(new Class<?>[0]));
 		NativeImageHelper.addToClasses(classes, true,
 			DataMapperBinarySerializer.class,
 			JdkBinarySerializer.class,
@@ -95,13 +92,13 @@ public class NativeConfig {
 			"META-INF/services/org.hibernate.bytecode.spi.BytecodeProvider"::equals
 		);
 		NativeImageHelper.beautifyMetadata(metadataFile);
-		ObjectHelper.callIf(
-			serializationFile.isFile(), 
-			() -> {
+		if (serializationFile.isFile()) {
+			try {
 				FileUtils.copyFile(serializationFile, binaryFile);
-				return null;
+			} catch (Exception e) {
+				log.error("", e);
 			}
-		);
+		}
 	}
 	
 }

@@ -12,7 +12,7 @@ import org.springframework.core.io.Resource;
 import lombok.extern.slf4j.Slf4j;
 import net.ideahut.springboot.helper.FrameworkHelper;
 import net.ideahut.springboot.helper.ObjectHelper;
-import net.ideahut.springboot.object.StringSet;
+import net.ideahut.springboot.object.SetString;
 
 /*
  * MASIH EXPERIMENTAL !!!
@@ -31,7 +31,7 @@ public class ForyInstance {
 			Resource resource = new ClassPathResource(path);
 			byte[] bytes = FrameworkHelper.toByteArray(resource);
 			if (bytes.length != 0) {
-				StringSet names = FrameworkHelper.defaultDataMapper().read(bytes, StringSet.class);
+				SetString names = FrameworkHelper.defaultDataMapper().read(bytes, SetString.class);
 				Collection<Class<?>> types = FrameworkHelper.convertToClasses(names, ObjectHelper.getClassLoader(), false, null);
 				for (Class<?> type : types) {
 					f.register(type);

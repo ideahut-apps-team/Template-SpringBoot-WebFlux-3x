@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 
 import net.ideahut.springboot.admin.AdminHandler;
 import net.ideahut.springboot.advice.WebFluxAdvice;
-import net.ideahut.springboot.object.StringSet;
+import net.ideahut.springboot.object.SetString;
 
 /*
  * - Untuk menghandle semua error yang terjadi di aplikasi
@@ -37,9 +37,10 @@ class AppAdvice extends WebFluxAdvice {
 
 	@Override
 	protected Collection<String> exceptionSkipPaths() {
-		StringSet skipPaths = new StringSet();
-		skipPaths.add(adminHandler.getWebPath() + "/**");
-		return skipPaths;
+		return new SetString()
+		.assign(adminHandler.getWebPath() + "/**")
+		.assign(adminHandler.getApiPath() + "/login")
+		.assign(adminHandler.getApiPath() + "/logout");
 	}
 	
 }

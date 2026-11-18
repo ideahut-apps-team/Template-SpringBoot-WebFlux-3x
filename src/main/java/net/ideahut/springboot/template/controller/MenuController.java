@@ -10,12 +10,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import net.ideahut.springboot.annotation.Public;
 import net.ideahut.springboot.grid.GridHandler;
 import net.ideahut.springboot.grid.GridParent;
 import net.ideahut.springboot.grid.GridSource;
+import net.ideahut.springboot.helper.WebFluxHelper;
 import net.ideahut.springboot.mapper.DataMapper;
 import net.ideahut.springboot.template.entity.Menu;
 import net.ideahut.springboot.template.entity.MenuId;
+import reactor.core.publisher.Mono;
 
 /*
  * API untuk mendapatkan menu
@@ -25,10 +28,8 @@ import net.ideahut.springboot.template.entity.MenuId;
 @RequestMapping("/menu")
 class MenuController {
 	
-	private static class Strings {
-		private static final String GRID_PREFIX = "grid_";
-		private static final String MENU_ICON = "table_view";
-	}
+	private static final String GRID_PREFIX = "grid_";
+	private static final String MENU_ICON = "table_view";
 
 	private final DataMapper dataMapper;
 	private final GridHandler gridHandler;
@@ -42,15 +43,18 @@ class MenuController {
 		this.gridHandler = gridHandler;
 	}
 	
+	@Public
 	@GetMapping("list")
-	List<Menu> list() {
-		List<Menu> menus = new ArrayList<>();
-		menus.add(cache());
-		Menu grid = grid();
-		if (grid != null) {
-			menus.add(grid);
-		}
-		return menus;
+	public Mono<List<Menu>> list() {
+		return WebFluxHelper.fromCallable(() -> {
+			List<Menu> menus = new ArrayList<>();
+			menus.add(cache());
+			Menu grid = grid();
+			if (grid != null) {
+				menus.add(grid);
+			}
+			return menus;
+		});
 	}
 	
 	private Menu cache() {
@@ -80,9 +84,9 @@ class MenuController {
 			Menu proot = dataMapper.copy(root, Menu.class);
 			for (GridSource source : parent.getSources()) {
 				Menu menu = new Menu();
-				menu.setId(new MenuId(Strings.GRID_PREFIX + source.getName(), ""));
+				menu.setId(new MenuId(GRID_PREFIX + source.getName(), ""));
 				menu.setTitle(source.getTitle());
-				menu.setIcon(Strings.MENU_ICON);
+				menu.setIcon(MENU_ICON);
 				menu.setLink("/grid?name=" + source.getName() + "&parent=" + parent.getName());
 				menu.setParent(proot);
 				root.getChildren().add(menu);
@@ -91,17 +95,17 @@ class MenuController {
 			Menu proot = dataMapper.copy(root, Menu.class);
 			for (GridParent parent : parents) {
 				Menu menu = new Menu();
-				menu.setId(new MenuId(Strings.GRID_PREFIX + parent.getName(), ""));
+				menu.setId(new MenuId(GRID_PREFIX + parent.getName(), ""));
 				menu.setTitle(parent.getTitle());
-				menu.setIcon(Strings.MENU_ICON);
+				menu.setIcon(MENU_ICON);
 				menu.setParent(proot);
 				Menu pmenu = dataMapper.copy(menu, Menu.class);
 				root.getChildren().add(menu);
 				for (GridSource source : parent.getSources()) {
 					Menu child = new Menu();
-					child.setId(new MenuId(Strings.GRID_PREFIX + parent.getName() + "_" + source.getName(), ""));
+					child.setId(new MenuId(GRID_PREFIX + parent.getName() + "_" + source.getName(), ""));
 					child.setTitle(source.getTitle());
-					child.setIcon(Strings.MENU_ICON);
+					child.setIcon(MENU_ICON);
 					child.setLink("/grid?name=" + source.getName() + "&parent=" + parent.getName());
 					child.setParent(pmenu);
 					menu.getChildren().add(child);

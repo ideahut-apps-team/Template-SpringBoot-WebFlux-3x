@@ -8,7 +8,7 @@
             {
                 "name": "net.ideahut.springboot.job.entity.JobInstance",
                 "alias": "JobInstance",
-                "store": "instance",
+                "store": "jobInstance",
                 "match": "contain",
                 "relations": [
                     {
@@ -20,7 +20,7 @@
             {
                 "name": "net.ideahut.springboot.job.entity.JobType",
                 "alias": "JobType",
-                "store": "type",
+                "store": "jobType",
                 "match": "contain",
                 "relations": [
                     {
@@ -32,7 +32,7 @@
             {
                 "name": "net.ideahut.springboot.job.entity.JobGroup",
                 "alias": "JobGroup",
-                "store": "group",
+                "store": "jobGroup",
                 "match": "contain",
                 "relations": [
                     {

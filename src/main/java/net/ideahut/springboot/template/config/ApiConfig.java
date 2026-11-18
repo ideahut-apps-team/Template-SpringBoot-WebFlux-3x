@@ -5,11 +5,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import net.ideahut.springboot.api.ApiAccessInternalService;
+import net.ideahut.springboot.api.ApiAccessInternal;
 import net.ideahut.springboot.api.ApiHandler;
 import net.ideahut.springboot.api.ApiHandlerImpl;
-import net.ideahut.springboot.api.ApiTokenService;
-import net.ideahut.springboot.api.ApiTokenServiceImpl;
+import net.ideahut.springboot.api.ApiSupport;
+import net.ideahut.springboot.api.ApiSupportImpl;
+import net.ideahut.springboot.api.ApiTokenSysParam;
+import net.ideahut.springboot.api.ApiTokenSysParamImpl;
 import net.ideahut.springboot.api.WebFluxApiService;
 import net.ideahut.springboot.api.WebFluxApiServiceImpl;
 import net.ideahut.springboot.definition.ApiDefinition;
@@ -36,10 +38,12 @@ class ApiConfig {
 		AppProperties appProperties,
 		EntityTrxManager entityTrxManager,
 		BinarySerializer binarySerializer,
-		@Qualifier(AppConstant.Bean.Redis.ACCESS)
+		@Qualifier(AppConstant.Bean.Redis.PRIMARY)
 		RedisTemplate<String, byte[]> redisTemplate,
 		@Qualifier(AppConstant.Bean.Task.PRIMARY)
-		TaskHandler taskHandler
+		TaskHandler taskHandler,
+		ApiTokenSysParam apiTokenSysParam,
+		RestHandler restHandler
 	) {
 		ApiDefinition.Handler handler = ObjectHelper.callOrElse(
 			appProperties.getApi() != null && appProperties.getApi().getHandler() != null, 
@@ -47,7 +51,7 @@ class ApiConfig {
 			ApiDefinition.Handler::new
 		);
 		
-		return new ApiHandlerImpl()
+		ApiHandlerImpl bean = new ApiHandlerImpl()
 		
 		// Serialize & deserialize byte array ke redis
 		.setBinarySerializer(binarySerializer)
@@ -55,7 +59,10 @@ class ApiConfig {
 		// Jumlah thread pada saat reload bean (menyiapkan data crud & request mapping), default: 3 thread
 		.setConfigureThreads(handler.getConfigureThreads())
 		
-		// Flag apakah bisa di-consume oleh Api Service / Provider lain
+		// Default rest timeout
+		.setDefaultRestTimeout(handler.getDefaultRestTimeout())
+		
+		// Flag apakah bisa menerima request dari Api Source / Provider lain
 		.setEnableConsumer(handler.getEnableConsumer())
 		
 		// Flag apakah Api Crud aktif atau tidak
@@ -71,6 +78,10 @@ class ApiConfig {
 		// EntityTrxManager
 		.setEntityTrxManager(entityTrxManager)
 		
+		// Custom function yang akan dieksekusi jika enableSync = true
+		// secara default sudah dihandle
+		.setOnSyncEntities(null)
+		
 		// RedisTemplate dan definisi penamaan key-nya
 		.setRedisParam(
 			new RedisParam<String, byte[]>(handler.getCacheKeyParam())
@@ -80,8 +91,32 @@ class ApiConfig {
 		// Optional, jika bean 'RequestMappingHandlerMapping' lebih dari satu atau namanya berbeda 
 		.setRequestMappingHandlerMappingBeanName(null)
 		
+		// RestHandler yang akan mengirim rest request
+		.setRestHandler(restHandler)
+		
 		// TaskHandler, untuk asinkronus
 		.setTaskHandler(taskHandler);
+		
+		// Simpan ApiToken ke SysParam, jika defaultApiTokenStorage tidak diset
+		// systemCode = API_TOKEN dan ParamCode harus diisi terlebih dahulu dengan ApiName yang tokennya akan disimpan
+		ObjectHelper.callOrElse(
+			handler.getApiTokenSysParamClass() != null, 
+			() -> bean.setApiTokenSysParamClass(handler.getApiTokenSysParamClass()), 
+			() -> bean.setApiTokenSysParamObject(apiTokenSysParam)
+		);
+		
+		// Untuk menyimpan ApiToken, jika null akan disimpan ke SysParam
+		bean
+		.setDefaultApiTokenStorageClass(handler.getDefaultApiTokenStorageClass())
+		.setDefaultApiTokenStorageObject(null);
+		
+		// Untuk custom RestClient, seperti menambahkan sertifikat, timeout, pakai proxy, dll.
+		// Secara default sudah ada, hanya diperlukan jika custom
+		bean
+		.setDefaultRestClientCreatorClass(handler.getDefaultRestClientCreatorClass())
+		.setDefaultRestClientCreatorObject(null);
+		
+		return bean;
 	}
 	
 	
@@ -92,12 +127,11 @@ class ApiConfig {
 	WebFluxApiService apiService(
 		AppProperties appProperties,
 		BinarySerializer binarySerializer,
+		ApiHandler apiHandler,
 		@Qualifier(AppConstant.Bean.Redis.ACCESS)
 		RedisTemplate<String, byte[]> redisTemplate,
-		ApiHandler apiHandler,
-		RestHandler restHandler,
-		ApiTokenService apiTokenService,
-		ApiAccessInternalService apiAccessInternalService
+		ApiSupport apiSupport,
+		ApiAccessInternal apiAccessInternal
 	) {
 		ApiDefinition.Service service = ObjectHelper.callOrElse(
 			appProperties.getApi() != null && appProperties.getApi().getService() != null, 
@@ -108,11 +142,11 @@ class ApiConfig {
 		return new WebFluxApiServiceImpl()
 				
 		// Untuk mendapatkan ApiAccess, jika token diterbitkan oleh service ini sendiri
-		.setApiAccessInternalService(apiAccessInternalService)
+		.setApiAccessInternal(apiAccessInternal)
 		
 		// Untuk mendapatkan ApiAccess ke service yang menerbitkan token
 		// Secara default sudah dihandle, fungsi ini diperlukan jika ada custom
-		.setApiAccessRemoteService(null)
+		.setApiAccessRemote(null)
 		
 		// ApiHandler
 		.setApiHandler(apiHandler)
@@ -121,86 +155,87 @@ class ApiConfig {
 		// Jika tidak diset akan digunakan ID dari application context (property 'spring.application.name')
 		.setApiName(service.getApiName())
 		
-		// Daftar ApiProcessor yang digunakan
-		.setApiProcessors(ModuleApi.getDefaultProcessors())
-		
-		// Untuk custom RestClient, seperti menambahkan sertifikat, timeout, dll.
-		// Secara default sudah ada, hanya diperlukan jika custom
-		.setApiRestClientCreator(null)
+		// Daftar ApiRoleGate yang digunakan
+		.setApiRoleGates(ModuleApi.getDefaultApiRoleGates())
 		
 		// Secara default sudah ada, hanya diperlukan untuk mendapatkan ApiSource custom
 		// misalnya daftar ApiSource tersimpan di file
-		.setApiSourceService(null)
+		.setApiSourceLoader(null)
 		
-		// Service untuk meng-handle token
-		.setApiTokenService(apiTokenService)
+		// Untuk menangani token, jwt, signature, dan validasi
+		.setApiSupport(apiSupport)
 		
 		// Serialize & deserialize byte array ke redis
 		.setBinarySerializer(binarySerializer)
 		
+		// Cache expiry, untuk data access & token baik yang null maupun tidak
+		.setCacheExpiry(service.getCacheExpiry())
+		
+		// Flag untuk debug saat mendapatkan ApiAccess dan call endpoint
+		.setDebug(service.getDebug())
+		
 		// Custom Header name
 		.setHeaderName(null)
 		
-		// Cache expiry, untuk data access & consumer baik yang null maupun tidak
-		.setCacheExpiry(service.getCacheExpiry())
-		
 		// RedisTemplate dan definisi penamaan key-nya
+		// Untuk menyimpan ApiAccess & ApiToken
 		.setRedisParam(
 			new RedisParam<String, byte[]>(service.getCacheKeyParam())
 			.setRedisTemplate(redisTemplate)
 		)
 		
-		// RestHandler
-		.setRestHandler(restHandler);
+		// Flag apakah error di ApiAccess dikembalikan null atau di-throw error
+		.setThrowApiAccessError(service.getThrowApiAccessError());
 	}
 	
 	
 	/*
-	 * API TOKEN SERVICE
+	 * API SUPPORT
 	 */
 	@Bean
-	ApiTokenService apiTokenService(
-		AppProperties appProperties,
-		SysParamHandler sysParamHandler
+	ApiSupport apiSupport(
+		AppProperties appProperties
 	) {
-		ApiDefinition.Token token = ObjectHelper.callOrElse(
-			appProperties.getApi() != null && appProperties.getApi().getToken() != null, 
-			() -> appProperties.getApi().getToken(), 
-			ApiDefinition.Token::new
+		ApiDefinition.Support support = ObjectHelper.callOrElse(
+			appProperties.getApi() != null && appProperties.getApi().getSupport() != null, 
+			() -> appProperties.getApi().getSupport(), 
+			ApiDefinition.Support::new
 		);
 		
-		return new ApiTokenServiceImpl()
+		return new ApiSupportImpl()
 		
-		// Secara default sudah ada, diperlukan untuk mendapatkan ApiToken custom		
-		.setApiTokenRetriever(null)
+		// Untuk membuat ApiToken dari sisi server di ApiProviderGate.
+		.setApiConsumerJwtParam(support.getApiConsumerJwtParam())
 		
-		// Default Consumer (komunikasi antar service) secret, digest , & expiry, jika tidak diset di database
-		.setConsumerJwtParam(token.getConsumerJwtParam())
+		// Untuk membuat token di ApiRoleGate
+		.setApiRoleGateJwtParam(support.getApiRoleGateJwtParam())
+		
+		// Batas atas & bawah timestamp yang dikirim oleh klien
+		// Contoh: jika diset 1 menit, berarti request yang dikirim valid jika timestamp client dalam range -+ 1 menit
+		.setApiSourceGateTimeSpan(support.getApiSourceGateTimeSpan())
 		
 		// index redisTemplate untuk meyimpan consumer token jika menggunakan MultipleRedisTemplate, default index 1
-		.setConsumerTokenStorageIndex(token.getConsumerTokenStorageIndex())
-		
-		// Default JwtProcessor secret, digest , & expiry, jika tidak diset di database
-		.setProcessorJwtParam(token.getProcessorJwtParam())
-		
-		// Batas atas & bawah timestamp signature yang dikirim
-		// Contoh: jika diset 1 menit, berarti signature yang dikirim valid jika timestamp client dalam range -+ 1 menit
-		.setSignatureTimeSpan(token.getSignatureTimeSpan())
-		
-		// Untuk menyimpan ApiToken di SysParam, sysCode = API_TOKEN, paramCode = [ApiName]
-		.setSysParamHandler(sysParamHandler)
-		
-		// Pakai ApiToken di dalam ApiProcessor untuk request ke ApiSource lain, 
-		// jika false atau ApiToken tidak ada, maka akan digunakan Signature (berdasarkan secret dan digest) 
-		.setUseApiTokenInProcessor(token.getUseApiTokenInProcessor());
+		.setApiSourceGateTokenStorageIndex(support.getApiSourceGateTokenStorageIndex());
 	}
 	
 	
 	/*
-	 * API ACCESS INTERNAL SERVICE
+	 * API TOKEN SYSPARAM
 	 */
 	@Bean
-	ApiAccessInternalService apiAccessInternalService(
+	ApiTokenSysParam apiTokenSysParam(
+		SysParamHandler sysParamHandler
+	) {
+		return new ApiTokenSysParamImpl()
+		.setSysParamHandler(sysParamHandler);
+	}
+	
+	
+	/*
+	 * API ACCESS INTERNAL
+	 */
+	@Bean
+	ApiAccessInternal apiAccessInternal(
 		AuthService authService
 	) {
 		return authService::getApiAccessForInternal;

@@ -22,15 +22,17 @@ import net.ideahut.springboot.annotation.Public;
 import net.ideahut.springboot.cache.CacheGroupHandler;
 import net.ideahut.springboot.cache.CacheGroupProperties;
 import net.ideahut.springboot.cache.CacheHandler;
-import net.ideahut.springboot.helper.ObjectHelper;
 import net.ideahut.springboot.helper.StringHelper;
 import net.ideahut.springboot.helper.TimeHelper;
+import net.ideahut.springboot.helper.WebFluxHelper;
 import net.ideahut.springboot.mapper.DataMapper;
+import net.ideahut.springboot.object.ListObject;
+import net.ideahut.springboot.object.ListString;
 import net.ideahut.springboot.object.Result;
-import net.ideahut.springboot.object.StringList;
 import net.ideahut.springboot.task.TaskListExecutor;
 import net.ideahut.springboot.template.app.AppProperties;
 import net.ideahut.springboot.template.object.CacheData;
+import reactor.core.publisher.Mono;
 
 /*
  * Contoh penggunaan CacheHandler
@@ -66,124 +68,142 @@ class CacheController {
 	}
 	
 	@GetMapping("/groups")
-	ArrayNode groups() {
-		ArrayNode items = dataMapper.createArrayNode();
-		List<CacheGroupProperties> groups = appProperties.getCache().getGroups();
-		for (CacheGroupProperties group : groups) {
-			if (0 != group.getLimit()) {
-				Long size = cacheGroupHandler.size(group.getName());
-				ObjectNode item = items.addObject();
-				item.put("name", group.getName());
-				item.put("limit", group.getLimit());
-				item.put("size", size);
+	public Mono<ArrayNode> groups() {
+		return WebFluxHelper.fromCallable(() -> {
+			ArrayNode items = dataMapper.createArrayNode();
+			List<CacheGroupProperties> groups = appProperties.getCache().getGroups();
+			for (CacheGroupProperties group : groups) {
+				if (0 != group.getLimit()) {
+					Long size = cacheGroupHandler.size(group.getName());
+					ObjectNode item = items.addObject();
+					item.put("name", group.getName());
+					item.put("limit", group.getLimit());
+					item.put("size", size);
+				}
 			}
-		}
-		return items;
+			return items;
+		});
 	}
 	
 	@GetMapping("/get")
-	Result get(
+	public Mono<Result> get(
 		@RequestParam(value = GROUP, required = false) String inGroup,
 		@RequestParam(KEY) String key
 	) {
-		String group = getCacheGroup(inGroup);
-		Boolean[] cached = { Boolean.TRUE };
-		CacheData data = cacheGroupHandler.get(
-			CacheData.class, 
-			group, 
-			key, 
-			() -> {
-				cached[0] = Boolean.FALSE;
-				return createCacheData(group, key);
-			}
-		);
-		return Result.success(data)
-		.setInfo(GROUP, group)
-		.setInfo("cached", cached[0]);
+		return WebFluxHelper.fromCallable(() -> {
+			String group = getCacheGroup(inGroup);
+			Boolean[] cached = { Boolean.TRUE };
+			CacheData data = cacheGroupHandler.get(
+				CacheData.class, 
+				group, 
+				key, 
+				() -> {
+					cached[0] = Boolean.FALSE;
+					return createCacheData(group, key);
+				}
+			);
+			return Result.success(data)
+			.setInfo(GROUP, group)
+			.setInfo("cached", cached[0]);
+		});
 	}
 	
 	@GetMapping("/size")
-	Result size(
+	public Mono<Result> size(
 		@RequestParam(value = GROUP, required = false) String inGroup
 	) {
-		String group = getCacheGroup(inGroup);
-		Long size = cacheGroupHandler.size(group);
-		return Result.success()
-		.setInfo(GROUP, group)
-		.setInfo("size", size);
+		return WebFluxHelper.fromCallable(() -> {
+			String group = getCacheGroup(inGroup);
+			Long size = cacheGroupHandler.size(group);
+			return Result.success()
+			.setInfo(GROUP, group)
+			.setInfo("size", size);
+		});
 	}
 	
 	@GetMapping("/keys")
-	Result keys(
-		@RequestParam(value = GROUP, required = false) String inGroup
+	public Mono<Result> keys(
+		@RequestParam(value = GROUP, required = false) String inGroup,
+		@RequestParam(value = "start", required = false) Long inStart,
+		@RequestParam(value = "end", required = false) Long inEnd
 	) {
-		String group = getCacheGroup(inGroup);
-		List<String> keys = cacheGroupHandler.keys(group);
-		return Result.success(keys)
-		.setInfo(GROUP, group);
+		return WebFluxHelper.fromCallable(() -> {
+			String group = getCacheGroup(inGroup);
+			Long start = inStart != null && inStart > 0 ? inStart : 0L;
+			Long end = inEnd != null && inEnd > 0 ? inEnd : cacheGroupHandler.size(group);
+			List<String> keys = cacheGroupHandler.keys(group, start, end);
+			return Result.success(keys)
+			.setInfo(GROUP, group);
+		});
 	}
 	
 	@DeleteMapping("/delete")
-	Result delete(
+	public Mono<Result> delete(
 		@RequestParam(value = GROUP, required = false) String inGroup,
 		@RequestParam(KEY) String key
 	) {
-		String group = getCacheGroup(inGroup);
-		cacheGroupHandler.delete(group, key);
-		return Result.success()
-		.setInfo(GROUP, group)
-		.setInfo(KEY, key);
+		return WebFluxHelper.fromCallable(() -> {
+			String group = getCacheGroup(inGroup);
+			cacheGroupHandler.delete(group, key);
+			return Result.success()
+			.setInfo(GROUP, group)
+			.setInfo(KEY, key);
+		});
 	}
 	
 	@DeleteMapping("/clear")
-	Result clear(
+	public Mono<Result> clear(
 		@RequestParam(value = GROUP, required = false) String inGroup
 	) {
-		String group = getCacheGroup(inGroup);
-		cacheGroupHandler.clear(group);
-		return Result.success()
-		.setInfo(GROUP, group);
+		return WebFluxHelper.fromCallable(() -> {
+			String group = getCacheGroup(inGroup);
+			cacheGroupHandler.clear(group);
+			return Result.success()
+			.setInfo(GROUP, group);
+		});
 	}
 	
 	@GetMapping("/any")
-	CacheData any(
+	public Mono<CacheData> any(
 		@RequestParam(name = GROUP, required = false) String group, 
 		@RequestParam(KEY) String key
 	) {
-		return ObjectHelper.callOrElse(
-			!StringHelper.isBlank(group),
-			() -> cacheGroupHandler.get(CacheData.class, group, key, () -> {
-				log.info("--- Group-Callable, group: {}, key: {}", group, key);
-				return createCacheData(group, key);
-			}), 
-			() -> cacheSingleHandler.get(CacheData.class, key, () -> {
-				log.info("--- Single-Callable, key: {}", key);
-				return createCacheData(group, key);
-			})
-		);
+		return WebFluxHelper.fromCallable(() -> {
+			if (!StringHelper.isBlank(group)) {
+				return cacheGroupHandler.get(CacheData.class, group, key, () -> {
+					log.info("--- Group-Callable, group: {}, key: {}", group, key);
+					return createCacheData(group, key);
+				});
+			} else {
+				return cacheSingleHandler.get(CacheData.class, key, () -> {
+					log.info("--- Single-Callable, key: {}", key);
+					return createCacheData(group, key);
+				});
+			}
+		});
 	}
 	
 	@GetMapping("/list")
-	List<CacheData> list(
+	public Mono<List<CacheData>> list(
 		@RequestParam(name = GROUP, required = false) String group, 
-		@RequestParam(KEY) StringList keys
+		@RequestParam(KEY) ListString keys
 	) {
-		return ObjectHelper.callOrElse(
-			!StringHelper.isBlank(group),
-			() -> cacheGroupHandler.multiList(CacheData.class, group, keys), 
-			() -> cacheSingleHandler.multiList(CacheData.class, keys)
+		return WebFluxHelper.fromCallable(() ->  
+			!StringHelper.isBlank(group) ?
+			cacheGroupHandler.multiList(CacheData.class, group, keys) : 
+			cacheSingleHandler.multiList(CacheData.class, keys)
 		);
 	}
 	
 	@GetMapping("/map")
-	Map<String, CacheData> map(
+	public Mono<Map<String, CacheData>> map(
 		@RequestParam(name = GROUP, required = false) String group, 
-		@RequestParam(KEY) StringList keys
+		@RequestParam(KEY) ListString keys
 	) {
-		return ObjectHelper.callOrElse(
-			!StringHelper.isBlank(group),
-			() -> cacheGroupHandler.multiMap(CacheData.class, group, keys), 
-			() -> cacheSingleHandler.multiMap(CacheData.class, keys)
+		return WebFluxHelper.fromCallable(() -> 
+			!StringHelper.isBlank(group) ?
+			cacheGroupHandler.multiMap(CacheData.class, group, keys) : 
+			cacheSingleHandler.multiMap(CacheData.class, keys)
 		);
 	}
 	
@@ -192,39 +212,43 @@ class CacheController {
 	 * Diharapkan tidak semua request akan melakukan input data ke cache
 	 */
 	@GetMapping("/concurrent")
-	List<Object> concurrent(
+	public Mono<ListObject> concurrent(
 		@RequestParam(name = GROUP, required = false) String group,
-		@RequestParam(name = "concurrency", required = false) Integer concurrency
+		@RequestParam(name = "concurrency", required = false) Integer concurrency,
+		@RequestParam(name = "disableVirtualThread", required = false) Boolean disableVirtualThread
 	) {
-		String key = UUID.randomUUID().toString();
-		int threads = ObjectHelper.useOrElse(concurrency != null && concurrency > 0, concurrency, 100);
-		TaskListExecutor executor = TaskListExecutor.of(threads);
-		for (int i = 0; i < threads; i++) {
-			int fi = i;
-			executor.add(() -> getCacheData(fi, group, key));
-		}
-		return executor.getObjects();
+		return WebFluxHelper.fromCallable(() -> {
+			String key = UUID.randomUUID().toString();
+			long sleep = 4; // detik
+			int threads = concurrency != null && concurrency > 0 ? concurrency : 100;
+			TaskListExecutor executor = TaskListExecutor.of(Boolean.TRUE.equals(disableVirtualThread), threads, true);
+			for (int i = 0; i < threads; i++) {
+				int fi = i;
+				executor.add(() -> getCacheData(fi, group, key, sleep));
+			}
+			return executor.getObjects();
+		});
 	}
 	
 	
 	private String getCacheGroup(String inGroup) {
-		return ObjectHelper.callOrElse(!StringHelper.isBlank(inGroup), () -> inGroup, () -> DEFAULT_GROUP);
+		return !StringHelper.isBlank(inGroup) ? inGroup : DEFAULT_GROUP;
 	}
 	
-	private CacheData getCacheData(int index, String group, String key) {
-		return ObjectHelper.callOrElse(
-			!StringHelper.isBlank(group),
-			() -> cacheGroupHandler.get(CacheData.class, group, key, () -> {
-				TimeUnit.SECONDS.sleep(2);
+	private CacheData getCacheData(int index, String group, String key, long sleep) {
+		if (!StringHelper.isBlank(group)) {
+			return cacheGroupHandler.get(CacheData.class, group, key, () -> {
+				TimeUnit.SECONDS.sleep(sleep);
 				log.info("--- Group-Concurrent, group: {}, key: {}, index: {}", group, key, index);
 				return createCacheData(group, key);
-			}), 
-			() -> cacheSingleHandler.get(CacheData.class, key, () -> {
-				TimeUnit.SECONDS.sleep(2);
+			});
+		} else {
+			return cacheSingleHandler.get(CacheData.class, key, () -> {
+				TimeUnit.SECONDS.sleep(sleep);
 				log.info("--- Single-Concurrent: key: {}, index: {}", key, index);
 				return createCacheData(group, key);
-			})
-		);
+			});
+		}
 	}
 	
 	private CacheData createCacheData(String group, String key) {

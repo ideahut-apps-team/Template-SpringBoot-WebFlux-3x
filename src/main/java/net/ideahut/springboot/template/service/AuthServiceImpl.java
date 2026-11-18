@@ -16,23 +16,20 @@ import net.ideahut.springboot.api.ApiAccess;
 import net.ideahut.springboot.api.ApiAuth;
 import net.ideahut.springboot.api.ApiHeaderValue;
 import net.ideahut.springboot.api.ApiParameter;
-import net.ideahut.springboot.api.ApiProcessor;
 import net.ideahut.springboot.api.ApiRequest;
+import net.ideahut.springboot.api.ApiRoleGate;
 import net.ideahut.springboot.api.ApiSource;
 import net.ideahut.springboot.api.ApiUser;
 import net.ideahut.springboot.api.WebFluxApiService;
-import net.ideahut.springboot.api.processor.AgentHostJwtApiProcessor;
-import net.ideahut.springboot.api.processor.AgentJwtApiProcessor;
-import net.ideahut.springboot.api.processor.HostJwtApiProcessor;
-import net.ideahut.springboot.api.processor.StandardJwtApiProcessor;
+import net.ideahut.springboot.api.gate.role.AgentHostJwtApiRoleGate;
+import net.ideahut.springboot.api.gate.role.AgentJwtApiRoleGate;
+import net.ideahut.springboot.api.gate.role.HostJwtApiRoleGate;
+import net.ideahut.springboot.api.gate.role.StandardJwtApiRoleGate;
 import net.ideahut.springboot.bean.BeanConfigure;
-import net.ideahut.springboot.exception.ResultRuntimeException;
 import net.ideahut.springboot.helper.ErrorHelper;
-import net.ideahut.springboot.helper.ObjectHelper;
 import net.ideahut.springboot.helper.StringHelper;
 import net.ideahut.springboot.helper.TimeHelper;
-import net.ideahut.springboot.object.Message;
-import net.ideahut.springboot.object.Result;
+import net.ideahut.springboot.object.MapString;
 import net.ideahut.springboot.object.TimeValue;
 import net.ideahut.springboot.redis.RedisCommand;
 import net.ideahut.springboot.serializer.BinarySerializer;
@@ -45,11 +42,11 @@ class AuthServiceImpl implements AuthService, BeanConfigure {
 	private static final String AUTH_PREFIX = "AUTH-";
 	private static final TimeValue AUTH_EXPIRY = TimeValue.of(TimeUnit.MINUTES, 60L); // 1 jam
 	private static final TimeValue ACCESS_EXPIRY = TimeValue.of(TimeUnit.HOURS, 24L); // 1 hari
-	private static final List<String> JWT_PROCESSORS = Arrays.asList(
-		StandardJwtApiProcessor.API_TYPE,
-		AgentJwtApiProcessor.API_TYPE,
-		HostJwtApiProcessor.API_TYPE,
-		AgentHostJwtApiProcessor.API_TYPE
+	private static final List<String> JWT_ROLE_GATES = Arrays.asList(
+		StandardJwtApiRoleGate.API_TYPE,
+		AgentJwtApiRoleGate.API_TYPE,
+		HostJwtApiRoleGate.API_TYPE,
+		AgentHostJwtApiRoleGate.API_TYPE
 	);
 	private static final String API_ROLE = "USER-FLUX";
 	private static final Map<String, UserData> users;
@@ -97,11 +94,11 @@ class AuthServiceImpl implements AuthService, BeanConfigure {
 		ErrorHelper.throwNull(user, () -> "User not found");
 		ErrorHelper.throwIf(!user.getPassword().equals(password), () -> "Invalid password");
 		
-		String apiType = apiRequest.getHeader(apiService.getApiHeaderName().getType(), StandardJwtApiProcessor.API_TYPE);
-		ApiProcessor apiProcessor = apiService.getApiProcessor(apiType);
-		ErrorHelper.throwNull(apiProcessor, () -> "ApiProcessor not found");
+		String apiType = apiRequest.getHeader(apiService.getApiHeaderName().getType(), StandardJwtApiRoleGate.API_TYPE);
+		ApiRoleGate apiRoleGate = apiService.getApiRoleGate(apiType);
+		ErrorHelper.throwNull(apiRoleGate, () -> "ApiRoleGate not found, ApiType: " + apiType);
 		boolean isJwtCheck = apiRequest.getHeader(boolean.class, "Jwt-Check", false);
-		boolean isJwtType = JWT_PROCESSORS.contains(apiType);
+		boolean isJwtType = JWT_ROLE_GATES.contains(apiType);
 		
 		Long createdOn = TimeHelper.currentEpochMillis();
 		ApiAccess apiAccess = new ApiAccess()
@@ -114,14 +111,16 @@ class AuthServiceImpl implements AuthService, BeanConfigure {
 		)
 		// set appid
 		.setAttribute(ApiAccess.Attribute.APP_ID, apiService.getApiName());
-		ObjectHelper.callIf(isJwtType && isJwtCheck, () -> apiAccess.setAttribute("check", "true"));
+		if (isJwtType && isJwtCheck) {
+			apiAccess.setAttribute("check", "true");
+		}
 		
 		ApiParameter apiParameter = new ApiParameter()
 		.setApiType(apiType)
 		.setApiName(apiService.getApiName())
 		.setApiRequest(apiRequest);
 		
-		ApiAuth apiAuth = apiProcessor.createApiAuth(apiParameter, apiAccess);
+		ApiAuth apiAuth = apiRoleGate.createApiAuth(apiParameter, apiAccess);
 		byte[] bytes = binarySerializer.serialize(ApiAuth.class, apiAuth);
 		redisCommand.valueSet(AUTH_PREFIX + apiAuth.getApiKey(), bytes, AUTH_EXPIRY);
 		return apiAuth;
@@ -132,16 +131,12 @@ class AuthServiceImpl implements AuthService, BeanConfigure {
 		ApiRequest apiRequest
 	) {
 		ApiAccess apiAccess = apiService.getApiAccess(apiRequest);
-		return ObjectHelper.callIf(
-			apiAccess != null, 
-			() -> {
-				ErrorHelper.throwIf(!isInternalApiAccess(apiAccess), () -> "Invalid ApiPublisher");
-				ApiAccess theAccess = ObjectHelper.useOrDefault(apiAccess, null);
-				redisCommand.keyDelete(AUTH_PREFIX + theAccess.getApiKey());
-				apiService.removeApiAccess(null, theAccess.getApiKey());
-				return apiAccess;
-			}
-		);
+		if (apiAccess != null) {
+			ErrorHelper.throwIf(!isInternalApiAccess(apiAccess), () -> "Invalid ApiPublisher");
+			redisCommand.keyDelete(AUTH_PREFIX + apiAccess.getApiKey());
+			apiService.removeApiAccess(null, apiAccess.getApiKey());
+		}
+		return apiAccess;
 	}
 
 	@Override
@@ -150,20 +145,15 @@ class AuthServiceImpl implements AuthService, BeanConfigure {
 	) {
 		ApiParameter apiParameter = apiService.getApiParameter(apiRequest);
 		String apiKey = apiParameter != null ? apiParameter.getApiKey() : null;
-		return ObjectHelper.callIf(
-			!StringHelper.isBlank(apiKey), 
-			() -> {
-				byte[] bytes = redisCommand.valueGet(AUTH_PREFIX + apiKey);
-				return ObjectHelper.callIf(
-					bytes != null, 
-					() -> {
-						ApiAuth apiAuth = binarySerializer.deserialize(ApiAuth.class, bytes);
-						ErrorHelper.throwIf(!isInternalApiAccess(apiAuth.getApiAccess()), () -> "Invalid ApiPublisher");
-						return apiAuth.getApiAccess();
-					}
-				);
+		if (!StringHelper.isBlank(apiKey)) {
+			byte[] bytes = redisCommand.valueGet(AUTH_PREFIX + apiKey);
+			if (bytes != null) {
+				ApiAuth apiAuth = binarySerializer.deserialize(ApiAuth.class, bytes);
+				ErrorHelper.throwIf(!isInternalApiAccess(apiAuth.getApiAccess()), () -> "Invalid ApiPublisher");
+				return apiAuth.getApiAccess();
 			}
-		);
+		}
+		return null;
 	}
 
 	/*
@@ -174,23 +164,21 @@ class AuthServiceImpl implements AuthService, BeanConfigure {
 		ApiRequest apiRequest
 	) {
 		ApiParameter apiParameter = apiService.getApiParameter(apiRequest);
-		String apiKey = ObjectHelper.useOrDefault(apiParameter.getApiKey(), "");
+		String apiKey = apiParameter.getApiKey() != null ? apiParameter.getApiKey() : "";
 		ErrorHelper.throwBlank(apiKey, () -> "ApiKey required");
 		ApiHeaderValue apiHeaderValue = apiRequest.getApiHeaderValue();
-		String from = ObjectHelper.useOrDefault(apiHeaderValue.getFrom(), "");
-		ErrorHelper.throwBlank(from, () -> StringHelper.format( "Header '{}' required", apiHeaderValue.getApiHeaderName().getFrom()));
-		ApiSource apiSource = apiService.getApiSource(from);
+		String source = apiHeaderValue.getSource() != null ? apiHeaderValue.getSource() : "";
+		ErrorHelper.throwBlank(source, () -> StringHelper.format( "Header '{}' required", apiHeaderValue.getApiHeaderName().getSource()));
+		ApiSource apiSource = apiService.getApiSource(source);
 		ErrorHelper.throwNull(apiSource, () -> "ApiSource not found");
-		Message message = apiService.getApiTokenService().validateSignature(apiSource, apiHeaderValue);
-		ErrorHelper.throwIf(message != null, () -> ResultRuntimeException.of(Result.error(message)));
+		MapString gateConfig = apiService.getApiGateConfig(apiSource);
+		apiService.getApiSupport().validateSignature(apiSource, apiRequest, gateConfig);
 		byte[] bytes = redisCommand.valueGet(AUTH_PREFIX + apiKey);
-		return ObjectHelper.callIf(
-			bytes != null, 
-			() -> {
-				ApiAccess apiAccess = binarySerializer.deserialize(ApiAuth.class, bytes).getApiAccess();
-				return apiAccess.setApiRole(API_ROLE);
-			}
-		);
+		if (bytes != null) {
+			ApiAccess apiAccess = binarySerializer.deserialize(ApiAuth.class, bytes).getApiAccess();
+			return apiAccess.setApiRole(API_ROLE);
+		}
+		return null;
 	}
 
 	/*
@@ -201,31 +189,28 @@ class AuthServiceImpl implements AuthService, BeanConfigure {
 		String apiKey = apiParameter != null && apiParameter.getApiKey() != null ? apiParameter.getApiKey() : "";
 		ErrorHelper.throwBlank(apiKey, () -> "ApiKey required");
 		byte[] bytes = redisCommand.valueGet(AUTH_PREFIX + apiKey);
-		return ObjectHelper.callIf(
-			bytes != null, 
-			() -> {
-				ApiAccess apiAccess = binarySerializer.deserialize(ApiAuth.class, bytes).getApiAccess();
-				return apiAccess.setApiRole(API_ROLE);
-			}
-		);
+		if (bytes != null) {
+			ApiAccess apiAccess = binarySerializer.deserialize(ApiAuth.class, bytes).getApiAccess();
+			return apiAccess.setApiRole(API_ROLE);
+		}
+		return null;
 	}
 	
 	@Override
 	public String createConsumerToken(ApiRequest apiRequest) {
 		ApiHeaderValue apiHeaderValue = apiRequest.getApiHeaderValue();
-		String from = ObjectHelper.useOrDefault(apiHeaderValue.getFrom(), "");
-		ErrorHelper.throwBlank(from, () -> StringHelper.format( "Header '{}' required", apiHeaderValue.getApiHeaderName().getFrom()));
-		ApiSource apiSource = apiService.getApiSource(from);
+		String source = apiHeaderValue.getSource() != null ? apiHeaderValue.getSource() : "";
+		ErrorHelper.throwBlank(source, () -> StringHelper.format( "Header '{}' required", apiHeaderValue.getApiHeaderName().getSource()));
+		ApiSource apiSource = apiService.getApiSource(source);
 		ErrorHelper.throwNull(apiSource, () -> "ApiSource not found");
-		return apiService.getApiTokenService().createConsumerApiToken(apiSource, apiRequest);
+		return apiService.getApiSupport().createConsumerApiToken(apiSource, apiRequest);
 	}
 	
 	private boolean isInternalApiAccess(ApiAccess apiAccess) {
-		return ObjectHelper.callOrElse(
-			apiAccess != null, 
-			() -> apiService.getApiName().equals(ObjectHelper.useOrDefault(apiAccess, null).getAttribute(ApiAccess.Attribute.APP_ID)), 
-			() -> false
-		);
+		if (apiAccess != null) {
+			return apiService.getApiName().equals(apiAccess.getAttribute(ApiAccess.Attribute.APP_ID));
+		}
+		return false;
 	}
 
 }

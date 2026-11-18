@@ -19,20 +19,21 @@ import net.ideahut.springboot.template.app.AppProperties;
 class RedisConfig {
 	
 	// untuk springboot admin
+	/**
 	@Primary
 	@Bean
 	RedisConnectionFactory redisConnectionFactory(
 		AppProperties appProperties
-	) throws Exception {
+	) {
 		return RedisHelper.createRedisConnectionFactory(appProperties.getRedis().getPrimary(), false);
 	}
-	
+	*/
 	
 	@Primary
 	@Bean(name = AppConstant.Bean.Redis.PRIMARY)
 	RedisTemplate<String, byte[]> primaryRedis(
 		AppProperties appProperties
-	) throws Exception {
+	) {
 		RedisProperties.Connection properties = appProperties.getRedis().getPrimary();
 		RedisConnectionFactory connectionFactory = RedisHelper.createRedisConnectionFactory(properties, true);
 		return RedisHelper.createRedisTemplate(connectionFactory, getTemplate(), false);
@@ -40,9 +41,9 @@ class RedisConfig {
 	
 	@Bean(name = AppConstant.Bean.Redis.ACCESS)
 	RedisTemplate<String, byte[]> accessRedis(
-		DataMapper dataMapper,
-		AppProperties appProperties
-	) throws Exception {
+		AppProperties appProperties,
+		DataMapper dataMapper
+	) {
 		RedisProperties.Connection properties = dataMapper.copy(appProperties.getRedis().getAccess());
 		RedisConnectionFactory connectionFactory = RedisHelper.createRedisConnectionFactory(properties, true);
 		return RedisHelper.createRedisTemplate(connectionFactory, getTemplate(), false);

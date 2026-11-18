@@ -90,7 +90,7 @@ class CrudConfig {
 			 // - Parameter name = crudCode
 			return (manager, name) -> {
 				ApiAccess apiAccess = ApiAccess.fromContext();
-				CrudProperties properties = apiService.getApiCrudProperties(apiAccess, name);
+				CrudProperties properties = apiService.getCrudProperties(apiAccess, name);
 				ErrorHelper.throwNull(properties, () -> StringHelper.format("CrudProperties not found, name: {}", name));
 				return properties;
 			};

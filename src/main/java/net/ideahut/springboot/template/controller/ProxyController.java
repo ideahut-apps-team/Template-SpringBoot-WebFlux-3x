@@ -1,10 +1,13 @@
 package net.ideahut.springboot.template.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,13 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import net.ideahut.springboot.annotation.Public;
 import net.ideahut.springboot.api.ApiService;
-import net.ideahut.springboot.api.ApiTokenSysParam;
-import net.ideahut.springboot.helper.ObjectHelper;
-import net.ideahut.springboot.helper.StringHelper;
+import net.ideahut.springboot.api.ApiSource;
 import net.ideahut.springboot.helper.WebFluxHelper;
 import net.ideahut.springboot.rest.RestMethod;
 import net.ideahut.springboot.rest.RestRequest;
-import net.ideahut.springboot.rest.RestResponse;
 import reactor.core.publisher.Mono;
 
 /*
@@ -30,6 +30,8 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/proxy")
 class ProxyController {
+	
+	private static final AntPathMatcher pathMatcher = new AntPathMatcher();
 	
 	private final ApiService apiService;
 	
@@ -46,13 +48,13 @@ class ProxyController {
 	 */
 	@Public
 	@PostMapping("/token")
-	void token(
+	public Mono<String> token(
 		@RequestParam("apiName") String apiName
 	) {
-		String token = apiService.getApiTokenService().retrieveApiToken(apiService, apiName);
-		if (!StringHelper.isEmpty(token) && ObjectHelper.isInstance(ApiTokenSysParam.class, apiService.getApiTokenService())) {
-			((ApiTokenSysParam) apiService.getApiTokenService()).updateSysParamApiToken(apiName, token);
-		}
+		return WebFluxHelper.fromCallable(() -> {
+			ApiSource apiSource = apiService.getApiSource(apiName);
+			return apiService.getApiSourceGate(apiSource).createApiToken(apiSource);
+		});
 	}
 
 	/*
@@ -74,38 +76,41 @@ class ProxyController {
 			RequestMethod.TRACE
 		}
 	)
-	Mono<byte[]> request(
-		@PathVariable("apiName") String apiName,
-		ServerHttpRequest httpRequest,
-		ServerHttpResponse httpResponse
+	public Mono<ResponseEntity<byte[]>> request(
+	    @PathVariable("apiName") String apiName,
+	    ServerHttpRequest httpRequest
 	) {
-		return WebFluxHelper
-		.onRequestBody(httpRequest)
-		.flatMap(requestBody -> {
-			// replace prefix path, dan path sisanya akan diappend ke base url service yang dituju
-			String path = httpRequest
-			.getPath()
-			.pathWithinApplication()
-			.value()
-			.replace("/proxy/request/" + apiName, "");
-			String apiToken = apiService.getApiTokenService().getSysParamApiToken(apiName);
-			RestRequest restRequest = new RestRequest()
-			.setPath(path)
-			.setMethod(RestMethod.valueOf(httpRequest.getMethod().name().toUpperCase()))
-			.setQueries(httpRequest.getQueryParams())
-			.setHeaders(WebFluxHelper.getHeaders(httpResponse));
-			ObjectHelper.callOrElse(
-				!RestMethod.GET.equals(restRequest.getMethod()), 
-				() -> restRequest.setBody(requestBody), 
-				() -> restRequest.getHeaders().remove(HttpHeaders.CONTENT_LENGTH)
-			);
-			RestResponse restResponse = apiService.callApiEndpoint(apiName, restRequest, apiToken);
-			for (String restHeaderName : restResponse.getHeaderNames()) {
-				httpResponse.getHeaders().put(restHeaderName, restResponse.getHeaderValues(restHeaderName));
-			}
-			byte[] body = restResponse.getBodyAsByteArray();
-			return Mono.just(body);
-		});
+	    String fullPath = httpRequest.getPath().pathWithinApplication().value();
+	    String matchPattern = "/request/" + apiName + "/**";
+	    String apiPath = pathMatcher.extractPathWithinPattern(matchPattern, fullPath);
+	    RestMethod method = RestMethod.valueOf(httpRequest.getMethod().name());
+	    String queryString = httpRequest.getURI().getRawQuery(); 
+	    RestRequest restRequest = new RestRequest()
+        .setPath("/" + apiPath)
+        .setMethod(method)
+        .setQueryString(queryString != null ? queryString : "")
+        .setHeaders(WebFluxHelper.getHeaders(httpRequest)); 
+	    Mono<RestRequest> requestMono;
+	    if (!RestMethod.GET.equals(method)) {
+	    	requestMono = WebFluxHelper
+	    	.fromDataBuffer(httpRequest.getBody())
+	    	.map(restRequest::setBody);
+	    } else {
+	        restRequest.getHeaders().remove(HttpHeaders.CONTENT_LENGTH);
+	        requestMono = Mono.just(restRequest);
+	    }
+	    return requestMono.flatMap(req -> WebFluxHelper.fromCallable(() -> apiService.callEndpoint(apiName, req).throwError()) )
+	    .map(restResponse -> {
+	        HttpHeaders responseHeaders = new HttpHeaders();
+	        for (String restHeaderName : restResponse.getHeaderNames()) {
+	            List<String> restHeaderValues = restResponse.getHeaderValues(restHeaderName);
+	            responseHeaders.addAll(restHeaderName, restHeaderValues);
+	        }
+	        return ResponseEntity
+	            .status(restResponse.getStatus())
+	            .headers(responseHeaders)
+	            .body(restResponse.getBodyAsByteArray());
+	    });
 	}
 	
 }

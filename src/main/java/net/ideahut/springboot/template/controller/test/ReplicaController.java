@@ -16,9 +16,11 @@ import net.ideahut.springboot.entity.EntityReplica;
 import net.ideahut.springboot.entity.EntityTrxManager;
 import net.ideahut.springboot.entity.TrxManagerInfo;
 import net.ideahut.springboot.entity.replica.ReplicaInfo;
+import net.ideahut.springboot.helper.WebFluxHelper;
 import net.ideahut.springboot.object.Result;
 import net.ideahut.springboot.template.entity.Information;
 import net.ideahut.springboot.template.entity.InformationLink;
+import reactor.core.publisher.Mono;
 
 /*
  * Contoh untuk EntityReplica
@@ -39,42 +41,50 @@ class ReplicaController {
 	}
 
 	@PostMapping(value = "/create/information")
-	Result createInformationReplica() {
-		TrxManagerInfo trxManagerInfo = entityTrxManager.getDefaultTrxManagerInfo();
-		EntityInfo entityInfo = trxManagerInfo.getEntityInfo(Information.class);
-		List<EntityReplica.Creation> creations = EntityReplica.create(entityInfo, 2);
-		return Result.success(creations);
+	public Mono<Result> createInformationReplica() {
+		return WebFluxHelper.fromCallable(() -> {
+			TrxManagerInfo trxManagerInfo = entityTrxManager.getDefaultTrxManagerInfo();
+			EntityInfo entityInfo = trxManagerInfo.getEntityInfo(Information.class);
+			List<EntityReplica.Creation> creations = EntityReplica.create(entityInfo, 2);
+			return Result.success(creations);
+		});
 	}
 	
 	@GetMapping(value = "/sql/information")
-	Result sqlInformationReplica() {
-		TrxManagerInfo trxManagerInfo = entityTrxManager.getDefaultTrxManagerInfo();
-		EntityInfo entityInfo = trxManagerInfo.getEntityInfo(Information.class);
-		List<String> sqls = EntityReplica.getSQL(entityInfo, 2);
-		return Result.success(sqls);
+	public Mono<Result> sqlInformationReplica() {
+		return WebFluxHelper.fromCallable(() -> {
+			TrxManagerInfo trxManagerInfo = entityTrxManager.getDefaultTrxManagerInfo();
+			EntityInfo entityInfo = trxManagerInfo.getEntityInfo(Information.class);
+			List<String> sqls = EntityReplica.getSQL(entityInfo, 2);
+			return Result.success(sqls);
+		});
 	}
 	
 	@PostMapping(value = "/create/information/link")
-	Result createInformationLinkReplica() {
-		TrxManagerInfo trxManagerInfo = entityTrxManager.getDefaultTrxManagerInfo();
-		EntityInfo entityInfo = trxManagerInfo.getEntityInfo(InformationLink.class);
-		EntityInfo refEntityInfo = trxManagerInfo.getEntityInfo(Information.class);
-		List<EntityReplica.Creation> creations = EntityReplica.create(entityInfo, 2, refEntityInfo);
-		return Result.success(creations);
+	public Mono<Result> createInformationLinkReplica() {
+		return WebFluxHelper.fromCallable(() -> {
+			TrxManagerInfo trxManagerInfo = entityTrxManager.getDefaultTrxManagerInfo();
+			EntityInfo entityInfo = trxManagerInfo.getEntityInfo(InformationLink.class);
+			EntityInfo refEntityInfo = trxManagerInfo.getEntityInfo(Information.class);
+			List<EntityReplica.Creation> creations = EntityReplica.create(entityInfo, 2, refEntityInfo);
+			return Result.success(creations);
+		});
 	}
 	
 	@GetMapping(value = "/sql/information/link")
-	Result sqlInformationLinkReplica() {
-		TrxManagerInfo trxManagerInfo = entityTrxManager.getDefaultTrxManagerInfo();
-		EntityInfo entityInfo = trxManagerInfo.getEntityInfo(InformationLink.class);
-		EntityInfo refEntityInfo = trxManagerInfo.getEntityInfo(Information.class);
-		List<String> sqls = EntityReplica.getSQL(entityInfo, 2, refEntityInfo);
-		return Result.success(sqls);
+	public Mono<Result> sqlInformationLinkReplica() {
+		return WebFluxHelper.fromCallable(() -> {
+			TrxManagerInfo trxManagerInfo = entityTrxManager.getDefaultTrxManagerInfo();
+			EntityInfo entityInfo = trxManagerInfo.getEntityInfo(InformationLink.class);
+			EntityInfo refEntityInfo = trxManagerInfo.getEntityInfo(Information.class);
+			List<String> sqls = EntityReplica.getSQL(entityInfo, 2, refEntityInfo);
+			return Result.success(sqls);
+		});
 	}
 	
 	@GetMapping("/latest")
-	Integer latest() {
-		return ReplicaInfo.getLatestReplica(entityTrxManager.getDefaultTrxManagerInfo(), Information.class);
+	public Mono<Integer> latest() {
+		return WebFluxHelper.fromCallable(() -> ReplicaInfo.getLatestReplica(entityTrxManager.getDefaultTrxManagerInfo(), Information.class));
 	}
 	
 }

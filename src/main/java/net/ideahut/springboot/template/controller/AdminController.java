@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 import net.ideahut.springboot.admin.AdminHandler;
 import net.ideahut.springboot.admin.WebFluxAdminController;
 import net.ideahut.springboot.annotation.ApiExclude;
-import net.ideahut.springboot.mapper.DataMapper;
 import net.ideahut.springboot.security.WebFluxSecurity;
 
 /*
@@ -21,24 +20,16 @@ import net.ideahut.springboot.security.WebFluxSecurity;
 @RequestMapping("/_/api")
 class AdminController extends WebFluxAdminController {
 	
-	private final DataMapper dataMapper;
 	private final AdminHandler adminHandler;
 	private final WebFluxSecurity webSecurity;
 	
 	@Autowired
 	AdminController(
-		DataMapper dataMapper,
 		AdminHandler adminHandler,
 		WebFluxSecurity webSecurity
 	) {
-		this.dataMapper = dataMapper;
 		this.adminHandler = adminHandler;
 		this.webSecurity = webSecurity;
-	}
-	
-	@Override
-	protected DataMapper dataMapper() {
-		return dataMapper;
 	}
 	
 	@Override
@@ -47,7 +38,7 @@ class AdminController extends WebFluxAdminController {
 	}
 	
 	@Override
-	protected WebFluxSecurity webFluxSecurity() {
+	protected WebFluxSecurity webSecurity() {
 		return webSecurity;
 	}
 	

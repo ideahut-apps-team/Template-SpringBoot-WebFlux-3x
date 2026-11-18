@@ -15,11 +15,14 @@ import net.ideahut.springboot.api.ApiAccess;
 import net.ideahut.springboot.api.ApiAuth;
 import net.ideahut.springboot.api.ApiRequest;
 import net.ideahut.springboot.api.WebFluxApiService;
+import net.ideahut.springboot.helper.WebFluxHelper;
 import net.ideahut.springboot.template.service.AuthService;
+import reactor.core.publisher.Mono;
 
 /*
  * API untuk login & logout
  */
+@Public
 @ComponentScan
 @RestController
 @RequestMapping("/auth")
@@ -37,34 +40,37 @@ class AuthController {
 		this.apiService = apiService;
 	}
 	
-	@Public
 	@PostMapping("/login")
-	ApiAuth login(
-		ServerHttpRequest httpRequest,
+	public Mono<ApiAuth> login(
 		@RequestParam("username") String username,
-		@RequestParam("password") String password
-	) throws Exception {
-		ApiRequest apiRequest = apiService.getApiRequest(httpRequest, true);
-		ApiAuth apiAuth = authService.login(apiRequest, username, password);
-		return apiAuth != null ? apiAuth.setApiAccess(null).setApiKey(null) : null;
-	}
-	
-	@Public
-	@RequestMapping(value = "/logout", method = {RequestMethod.GET, RequestMethod.POST})
-	ApiAccess logout(
+		@RequestParam("password") String password,
 		ServerHttpRequest httpRequest
 	) {
-		ApiRequest apiRequest = apiService.getApiRequest(httpRequest, true);
-		return authService.logout(apiRequest);
+		return WebFluxHelper.fromCallable(() -> {
+			ApiRequest apiRequest = apiService.getApiRequest(httpRequest, true);
+			ApiAuth apiAuth = authService.login(apiRequest, username, password);
+			return apiAuth != null ? apiAuth.setApiAccess(null).setApiKey(null) : null;
+		});
 	}
 	
-	@Public
+	@RequestMapping(value = "/logout", method = {RequestMethod.GET, RequestMethod.POST})
+	public Mono<ApiAccess> logout(
+		ServerHttpRequest httpRequest
+	) {
+		return WebFluxHelper.fromCallable(() -> {
+			ApiRequest apiRequest = apiService.getApiRequest(httpRequest, true);
+			return authService.logout(apiRequest);
+		});
+	}
+	
 	@RequestMapping(value = "/info", method = {RequestMethod.GET, RequestMethod.POST})
-	ApiAccess info(
+	public Mono<ApiAccess> info(
 		ServerHttpRequest httpRequest	
 	) {
-		ApiRequest apiRequest = apiService.getApiRequest(httpRequest, true);
-		return authService.info(apiRequest);
+		return WebFluxHelper.fromCallable(() -> {
+			ApiRequest apiRequest = apiService.getApiRequest(httpRequest, true);
+			return authService.info(apiRequest);
+		});
 	}
 	
 }

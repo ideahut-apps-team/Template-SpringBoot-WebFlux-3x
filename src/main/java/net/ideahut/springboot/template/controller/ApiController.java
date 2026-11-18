@@ -11,7 +11,9 @@ import net.ideahut.springboot.annotation.Public;
 import net.ideahut.springboot.api.ApiAccess;
 import net.ideahut.springboot.api.ApiRequest;
 import net.ideahut.springboot.api.WebFluxApiService;
+import net.ideahut.springboot.helper.WebFluxHelper;
 import net.ideahut.springboot.template.service.AuthService;
+import reactor.core.publisher.Mono;
 
 /*
  * Komunikasi antar ApiService
@@ -41,22 +43,26 @@ class ApiController {
 	 * Membuat token untuk API Consumer
 	 */
 	@RequestMapping(path = "/token", method = { RequestMethod.GET, RequestMethod.POST })
-	String token(
+	public Mono<String> token(
 		ServerHttpRequest httpRequest
 	) {
-		ApiRequest apiRequest = apiService.getApiRequest(httpRequest, true);
-		return authService.createConsumerToken(apiRequest);
+		return WebFluxHelper.fromCallable(() -> {
+			ApiRequest apiRequest = apiService.getApiRequest(httpRequest, true);
+			return authService.createConsumerToken(apiRequest);
+		});
 	}
 	
 	/*
 	 * Mendapatkan ApiAccess Object berdasarkan token API user
 	 */
 	@RequestMapping(path = "/access", method = { RequestMethod.GET, RequestMethod.POST })
-	ApiAccess access(
+	public Mono<ApiAccess> access(
 		ServerHttpRequest httpRequest
 	) {
-		ApiRequest apiRequest = apiService.getApiRequest(httpRequest, true);
-		return authService.getApiAccessForExternal(apiRequest);
+		return WebFluxHelper.fromCallable(() -> {
+			ApiRequest apiRequest = apiService.getApiRequest(httpRequest, true);
+			return authService.getApiAccessForExternal(apiRequest);
+		});
 	}
 	
 }
