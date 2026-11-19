@@ -380,15 +380,15 @@ config:
         primary:
             type: 0
             standalone:
-                host: '127.0.0.1'
-                port: '6379'
-                #password: 'a3213c419771fbd1a05cdde7127e6393ef852db97328b21a45de700e9bbe85db'
+                host: '<HOST>'
+                port: '<PORT>'
+                #password: '<PASSWORD>'
                 database: 0
         access:
             type: 0
             standalone:
-                host: '127.0.0.1'
-                port: '6379'
+                host: '<HOST>'
+                port: '<PORT>'
                 database: 1
                 
     #
@@ -552,7 +552,7 @@ config:
         storageKeyParam:
             appIdEnabled: true
             encryptEnabled: true
-        location: 'file:{user.dir}/extras/grid/**/*.json'
+        location: 'file:{user.dir}/extras/grid/**/*.yaml'
         #definition: 'file:{user.dir}/extras/grid/grid.def'
     
     #
@@ -561,8 +561,8 @@ config:
     mail:
         host: 'smtp.gmail.com'
         port: 587
-        username: 'socrates.apps.team@gmail.com'
-        password: 'csbyvmyazduwlamw'
+        username: '<USERNAME>'
+        password: '<PASSWORD>'
         properties:
             mail.smtp.host: smtp.gmail.com
             mail.smtp.ssl.trust: smtp.gmail.com
